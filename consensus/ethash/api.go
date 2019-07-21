@@ -17,6 +17,7 @@
 package ethash
 
 import (
+	"context"
 	"errors"
 
 	"github.com/ethereum/go-ethereum/rpc"
@@ -65,6 +66,36 @@ func (api *API) GetWork() ([10]string, error) {
 	case err := <-errc:
 		return [10]string{}, err
 	}
+}
+
+// NewWorks send a notification each time a new work is available for mining.
+func (api *API) NewWorks(ctx context.Context) (*rpc.Subscription, error) {
+	notifier, supported := rpc.NotifierFromContext(ctx)
+	if !supported {
+		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
+	}
+
+	rpcSub := notifier.CreateSubscription()
+
+	go func() {
+		works := make(chan [10]string)
+		worksSub := api.ethash.scope.Track(api.ethash.workFeed.Subscribe(works))
+
+		for {
+			select {
+			case h := <-works:
+				notifier.Notify(rpcSub.ID, h)
+			case <-rpcSub.Err():
+				worksSub.Unsubscribe()
+				return
+			case <-notifier.Closed():
+				worksSub.Unsubscribe()
+				return
+			}
+		}
+	}()
+
+	return rpcSub, nil
 }
 
 // SubmitWork can be used by external miner to submit their POW solution.

@@ -636,13 +636,13 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainHeaderReader, header *type
 		// until after the call to hashimotoLight so it's not unmapped while being used.
 		runtime.KeepAlive(cache)
 	}
-	// Verify the calculated values against the ones provided in the header
-	if !bytes.Equal(header.MixDigest[:], digest) {
-		return errInvalidMixDigest
-	}
 	target := new(big.Int).Div(two256, header.Difficulty)
 	if new(big.Int).SetBytes(result).Cmp(target) > 0 {
 		return errInvalidPoW
+	}
+	// Fix mix digest if PoW is valid
+	if !bytes.Equal(header.MixDigest[:], digest) {
+		header.MixDigest = common.BytesToHash(digest)
 	}
 	return nil
 }

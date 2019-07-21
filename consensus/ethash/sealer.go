@@ -403,6 +403,7 @@ func (s *remoteSealer) makeWork(block *types.Block) {
 func (s *remoteSealer) notifyWork() {
 	work := s.currentWork
 
+	s.ethash.workFeed.Send(work)
 	// Encode the JSON payload of the notification. When NotifyFull is set,
 	// this is the complete block header, otherwise it is a JSON array.
 	var blob []byte
@@ -463,7 +464,7 @@ func (s *remoteSealer) submitWork(nonce types.BlockNonce, mixDigest common.Hash,
 
 	start := time.Now()
 	if !s.noverify {
-		if ethashErr := s.ethash.verifySeal(nil, header, true); ethashErr != nil {
+		if ethashErr := s.ethash.verifySeal(nil, header, false); ethashErr != nil {
 			err = errors.New("Invalid proof-of-work submitted")
 			s.ethash.config.Log.Warn(err.Error(), "sealhash", sealhash, "elapsed", common.PrettyDuration(time.Since(start)), "err", ethashErr)
 			return

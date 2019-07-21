@@ -34,6 +34,7 @@ import (
 	"unsafe"
 
 	"github.com/edsrzf/mmap-go"
+	"github.com/ethereum/go-ethereum/event"
 	"github.com/ethereumfair/go-ethereum/consensus"
 	"github.com/ethereumfair/go-ethereum/log"
 	"github.com/ethereumfair/go-ethereum/metrics"
@@ -241,7 +242,7 @@ func (c *cache) generate(dir string, limit int, lock bool, test bool) {
 			size = 1024
 		}
 		// If we don't store anything on disk, generate and return.
-		if dir == "" {
+		if dir == "" || limit <= 0 {
 			c.cache = make([]uint32, size/4)
 			generateCache(c.cache, c.epoch, seed)
 			return
@@ -326,7 +327,7 @@ func (d *dataset) generate(dir string, limit int, lock bool, test bool) {
 			dsize = 32 * 1024
 		}
 		// If we don't store anything on disk, generate and return
-		if dir == "" {
+		if dir == "" || limit <= 0 {
 			cache := make([]uint32, csize/4)
 			generateCache(cache, d.epoch, seed)
 
@@ -459,6 +460,9 @@ type Ethash struct {
 
 	lock      sync.Mutex // Ensures thread safety for the in-memory caches and mining fields
 	closeOnce sync.Once  // Ensures exit channel will not be closed twice.
+
+	workFeed event.Feed
+	scope    event.SubscriptionScope
 }
 
 // New creates a full sized ethash PoW scheme and starts a background thread for
