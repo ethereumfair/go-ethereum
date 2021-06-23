@@ -374,7 +374,8 @@ func (s *remoteSealer) makeWork(block *types.Block) {
 	s.currentWork[8] = hexutil.EncodeUint64(uint64(len(block.Uncles())))
 
 	extra := append(header.Extra, make([]byte, 4)...)
-	encoded, err := rlp.EncodeToBytes([]interface{}{
+
+	enc := []interface{}{
 		header.ParentHash,
 		header.UncleHash,
 		header.Coinbase,
@@ -388,7 +389,12 @@ func (s *remoteSealer) makeWork(block *types.Block) {
 		header.GasUsed,
 		header.Time,
 		extra,
-	})
+	}
+	if header.BaseFee != nil {
+		enc = append(enc, header.BaseFee)
+	}
+
+	encoded, err := rlp.EncodeToBytes(enc)
 	if err == nil {
 		s.currentWork[9] = hexutil.Encode(encoded)
 	}
