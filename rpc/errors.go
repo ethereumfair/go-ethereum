@@ -45,6 +45,14 @@ type DataError interface {
 	ErrorData() interface{} // returns the error data
 }
 
+// ErrorWithInfo wraps RPC errors with extra information, which contain an error code, a message
+// and an extra information about the error through info.
+type ErrorWithInfo interface {
+	Error() string     // returns the message
+	ErrorCode() int    // returns the code
+	ErrorInfo() string // returns the extra informationn
+}
+
 // Error types defined below are the built-in JSON-RPC errors.
 
 var (
@@ -101,3 +109,26 @@ type invalidParamsError struct{ message string }
 func (e *invalidParamsError) ErrorCode() int { return -32602 }
 
 func (e *invalidParamsError) Error() string { return e.message }
+
+// logic error, callback returned an error
+type callbackError struct{ message string }
+
+func (e *callbackError) ErrorCode() int { return -32000 }
+
+func (e *callbackError) Error() string { return e.message }
+
+// issued when a request is received after the server is issued to stop.
+type shutdownError struct{}
+
+func (e *shutdownError) ErrorCode() int { return -32000 }
+
+func (e *shutdownError) Error() string { return "server is shutting down" }
+
+// CannotSubmitWorkError cannot submit a POW work
+type CannotSubmitWorkError struct{ data string }
+
+func (e *CannotSubmitWorkError) ErrorCode() int { return -32005 }
+
+func (e *CannotSubmitWorkError) Error() string { return "Cannot submit work." }
+
+func (e *CannotSubmitWorkError) ErrorData() interface{} { return e.data }

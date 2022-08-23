@@ -36,13 +36,14 @@ func TestTestMode(t *testing.T) {
 	ethash := NewTester(nil, false)
 	defer ethash.Close()
 
-	results := make(chan *types.Block)
+	results := make(chan types.SealResult)
 	err := ethash.Seal(nil, types.NewBlockWithHeader(header), results, nil)
 	if err != nil {
 		t.Fatalf("failed to seal block: %v", err)
 	}
 	select {
-	case block := <-results:
+	case result := <-results:
+		block := result.Block
 		header.Nonce = types.EncodeNonce(block.Nonce())
 		header.MixDigest = block.MixDigest()
 		if err := ethash.verifySeal(nil, header, false); err != nil {
@@ -111,18 +112,18 @@ func TestRemoteSealer(t *testing.T) {
 	sealhash := ethash.SealHash(header)
 
 	// Push new work.
-	results := make(chan *types.Block)
+	results := make(chan types.SealResult)
 	ethash.Seal(nil, block, results, nil)
 
 	var (
-		work [4]string
+		work [10]string
 		err  error
 	)
 	if work, err = api.GetWork(); err != nil || work[0] != sealhash.Hex() {
 		t.Error("expect to return a mining work has same hash")
 	}
 
-	if res := api.SubmitWork(types.BlockNonce{}, sealhash, common.Hash{}); res {
+	if res := api.SubmitWork(types.BlockNonce{}, sealhash, common.Hash{}, nil); res {
 		t.Error("expect to return false when submit a fake solution")
 	}
 	// Push new block with same block number to replace the original one.

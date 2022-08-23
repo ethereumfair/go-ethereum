@@ -178,6 +178,12 @@ type Block struct {
 	ReceivedFrom interface{}
 }
 
+// SealResult is the result of the realing work
+type SealResult struct {
+	Block    *Block
+	SealHash *common.Hash
+}
+
 // "external" block encoding. used for eth protocol, etc.
 type extblock struct {
 	Header *Header

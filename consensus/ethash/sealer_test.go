@@ -262,20 +262,21 @@ func TestStaleSubmission(t *testing.T) {
 			false,
 		},
 	}
-	results := make(chan *types.Block, 16)
+	results := make(chan types.SealResult, 16)
 
 	for id, c := range testcases {
 		for _, h := range c.headers {
 			ethash.Seal(nil, types.NewBlockWithHeader(h), results, nil)
 		}
-		if res := api.SubmitWork(fakeNonce, ethash.SealHash(c.headers[c.submitIndex]), fakeDigest); res != c.submitRes {
+		if res := api.SubmitWork(fakeNonce, ethash.SealHash(c.headers[c.submitIndex]), fakeDigest, nil); res != c.submitRes {
 			t.Errorf("case %d submit result mismatch, want %t, get %t", id+1, c.submitRes, res)
 		}
 		if !c.submitRes {
 			continue
 		}
 		select {
-		case res := <-results:
+		case resPack := <-results:
+			res := resPack.Block
 			if res.Header().Nonce != fakeNonce {
 				t.Errorf("case %d block nonce mismatch, want %x, get %x", id+1, fakeNonce, res.Header().Nonce)
 			}

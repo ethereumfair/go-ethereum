@@ -690,6 +690,10 @@ func (ethash *Ethash) APIs(chain consensus.ChainHeaderReader) []rpc.API {
 			Namespace: "ethash",
 			Service:   &API{ethash},
 		},
+		{
+			Namespace: "parity",
+			Service:   &API{ethash},
+		},
 	}
 }
 
