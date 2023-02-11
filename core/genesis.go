@@ -152,14 +152,8 @@ func CommitGenesisState(db ethdb.Database, hash common.Hash) error {
 		switch hash {
 		case params.MainnetGenesisHash:
 			genesis = DefaultGenesisBlock()
-		case params.RopstenGenesisHash:
-			genesis = DefaultRopstenGenesisBlock()
-		case params.RinkebyGenesisHash:
-			genesis = DefaultRinkebyGenesisBlock()
-		case params.GoerliGenesisHash:
-			genesis = DefaultGoerliGenesisBlock()
-		case params.SepoliaGenesisHash:
-			genesis = DefaultSepoliaGenesisBlock()
+		case params.TestnetGenesisHash:
+			genesis = DefaultTestnetGenesisBlock()
 		}
 		if genesis != nil {
 			alloc = genesis.Alloc
@@ -253,16 +247,16 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *Genesis, override
 		return params.AllEthashProtocolChanges, common.Hash{}, errGenesisNoConfig
 	}
 
-	applyOverrides := func(config *params.ChainConfig) {
-		if config != nil {
-			if overrideTerminalTotalDifficulty != nil {
-				config.TerminalTotalDifficulty = overrideTerminalTotalDifficulty
-			}
-			if overrideTerminalTotalDifficultyPassed != nil {
-				config.TerminalTotalDifficultyPassed = *overrideTerminalTotalDifficultyPassed
-			}
-		}
-	}
+	//applyOverrides := func(config *params.ChainConfig) {
+	//	if config != nil {
+	//		if overrideTerminalTotalDifficulty != nil {
+	//			config.TerminalTotalDifficulty = overrideTerminalTotalDifficulty
+	//		}
+	//		if overrideTerminalTotalDifficultyPassed != nil {
+	//			config.TerminalTotalDifficultyPassed = *overrideTerminalTotalDifficultyPassed
+	//		}
+	//	}
+	//}
 
 	// Just commit the new block if there is no stored genesis block.
 	stored := rawdb.ReadCanonicalHash(db, 0)
@@ -277,7 +271,7 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *Genesis, override
 		if err != nil {
 			return genesis.Config, common.Hash{}, err
 		}
-		applyOverrides(genesis.Config)
+		//applyOverrides(genesis.Config)
 		return genesis.Config, block.Hash(), nil
 	}
 	// We have the genesis block in database(perhaps in ancient database)
@@ -296,7 +290,7 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *Genesis, override
 		if err != nil {
 			return genesis.Config, hash, err
 		}
-		applyOverrides(genesis.Config)
+		//applyOverrides(genesis.Config)
 		return genesis.Config, block.Hash(), nil
 	}
 	// Check whether the genesis block is already written.
@@ -308,10 +302,10 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *Genesis, override
 	}
 	// Get the existing chain configuration.
 	newcfg := genesis.configOrDefault(stored)
-	applyOverrides(newcfg)
-	if err := newcfg.CheckConfigForkOrder(); err != nil {
-		return newcfg, common.Hash{}, err
-	}
+	//applyOverrides(newcfg)
+	//if err := newcfg.CheckConfigForkOrder(); err != nil {
+	//	return newcfg, common.Hash{}, err
+	//}
 	storedcfg := rawdb.ReadChainConfig(db, stored)
 	if storedcfg == nil {
 		log.Warn("Found genesis block without chain config")
@@ -325,7 +319,7 @@ func SetupGenesisBlockWithOverride(db ethdb.Database, genesis *Genesis, override
 	// apply the overrides.
 	if genesis == nil && stored != params.MainnetGenesisHash {
 		newcfg = storedcfg
-		applyOverrides(newcfg)
+		//applyOverrides(newcfg)
 	}
 	// Check config compatibility and write the config. Compatibility errors
 	// are returned to the caller unless we're already at block zero.
@@ -347,16 +341,8 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 		return g.Config
 	case ghash == params.MainnetGenesisHash:
 		return params.MainnetChainConfig
-	case ghash == params.RopstenGenesisHash:
-		return params.RopstenChainConfig
-	case ghash == params.SepoliaGenesisHash:
-		return params.SepoliaChainConfig
-	case ghash == params.RinkebyGenesisHash:
-		return params.RinkebyChainConfig
-	case ghash == params.GoerliGenesisHash:
-		return params.GoerliChainConfig
-	case ghash == params.KilnGenesisHash:
-		return DefaultKilnGenesisBlock().Config
+	case ghash == params.TestnetGenesisHash:
+		return params.TestnetChainConfig
 	default:
 		return params.AllEthashProtocolChanges
 	}
@@ -388,12 +374,10 @@ func (g *Genesis) ToBlock() *types.Block {
 	if g.Difficulty == nil && g.Mixhash == (common.Hash{}) {
 		head.Difficulty = params.GenesisDifficulty
 	}
-	if g.Config != nil && g.Config.IsLondon(common.Big0) {
-		if g.BaseFee != nil {
-			head.BaseFee = g.BaseFee
-		} else {
-			head.BaseFee = new(big.Int).SetUint64(params.InitialBaseFee)
-		}
+	if g.BaseFee != nil {
+		head.BaseFee = g.BaseFee
+	} else {
+		head.BaseFee = new(big.Int).SetUint64(params.InitialBaseFee)
 	}
 	return types.NewBlock(head, nil, nil, nil, trie.NewStackTrie(nil))
 }
@@ -409,9 +393,9 @@ func (g *Genesis) Commit(db ethdb.Database) (*types.Block, error) {
 	if config == nil {
 		config = params.AllEthashProtocolChanges
 	}
-	if err := config.CheckConfigForkOrder(); err != nil {
-		return nil, err
-	}
+	//if err := config.CheckConfigForkOrder(); err != nil {
+	//	return nil, err
+	//}
 	if config.Clique != nil && len(block.Extra()) < 32+crypto.SignatureLength {
 		return nil, errors.New("can't start clique chain without signers")
 	}
@@ -455,9 +439,9 @@ func DefaultGenesisBlock() *Genesis {
 }
 
 // DefaultRopstenGenesisBlock returns the Ropsten network genesis block.
-func DefaultRopstenGenesisBlock() *Genesis {
+func DefaultTestnetGenesisBlock() *Genesis {
 	return &Genesis{
-		Config:     params.RopstenChainConfig,
+		Config:     params.TestnetChainConfig,
 		Nonce:      66,
 		ExtraData:  hexutil.MustDecode("0x3535353535353535353535353535353535353535353535353535353535353535"),
 		GasLimit:   16777216,
@@ -466,42 +450,44 @@ func DefaultRopstenGenesisBlock() *Genesis {
 	}
 }
 
-// DefaultRinkebyGenesisBlock returns the Rinkeby network genesis block.
-func DefaultRinkebyGenesisBlock() *Genesis {
-	return &Genesis{
-		Config:     params.RinkebyChainConfig,
-		Timestamp:  1492009146,
-		ExtraData:  hexutil.MustDecode("0x52657370656374206d7920617574686f7269746168207e452e436172746d616e42eb768f2244c8811c63729a21a3569731535f067ffc57839b00206d1ad20c69a1981b489f772031b279182d99e65703f0076e4812653aab85fca0f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:   4700000,
-		Difficulty: big.NewInt(1),
-		Alloc:      decodePrealloc(rinkebyAllocData),
-	}
-}
+//
+//// DefaultRinkebyGenesisBlock returns the Rinkeby network genesis block.
+//func DefaultRinkebyGenesisBlock() *Genesis {
+//	return &Genesis{
+//		Config:     params.RinkebyChainConfig,
+//		Timestamp:  1492009146,
+//		ExtraData:  hexutil.MustDecode("0x52657370656374206d7920617574686f7269746168207e452e436172746d616e42eb768f2244c8811c63729a21a3569731535f067ffc57839b00206d1ad20c69a1981b489f772031b279182d99e65703f0076e4812653aab85fca0f00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+//		GasLimit:   4700000,
+//		Difficulty: big.NewInt(1),
+//		Alloc:      decodePrealloc(rinkebyAllocData),
+//	}
+//}
 
-// DefaultGoerliGenesisBlock returns the Görli network genesis block.
-func DefaultGoerliGenesisBlock() *Genesis {
-	return &Genesis{
-		Config:     params.GoerliChainConfig,
-		Timestamp:  1548854791,
-		ExtraData:  hexutil.MustDecode("0x22466c6578692069732061207468696e6722202d204166726900000000000000e0a2bd4258d2768837baa26a28fe71dc079f84c70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
-		GasLimit:   10485760,
-		Difficulty: big.NewInt(1),
-		Alloc:      decodePrealloc(goerliAllocData),
-	}
-}
-
-// DefaultSepoliaGenesisBlock returns the Sepolia network genesis block.
-func DefaultSepoliaGenesisBlock() *Genesis {
-	return &Genesis{
-		Config:     params.SepoliaChainConfig,
-		Nonce:      0,
-		ExtraData:  []byte("Sepolia, Athens, Attica, Greece!"),
-		GasLimit:   0x1c9c380,
-		Difficulty: big.NewInt(0x20000),
-		Timestamp:  1633267481,
-		Alloc:      decodePrealloc(sepoliaAllocData),
-	}
-}
+//
+//// DefaultGoerliGenesisBlock returns the Görli network genesis block.
+//func DefaultGoerliGenesisBlock() *Genesis {
+//	return &Genesis{
+//		Config:     params.GoerliChainConfig,
+//		Timestamp:  1548854791,
+//		ExtraData:  hexutil.MustDecode("0x22466c6578692069732061207468696e6722202d204166726900000000000000e0a2bd4258d2768837baa26a28fe71dc079f84c70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000"),
+//		GasLimit:   10485760,
+//		Difficulty: big.NewInt(1),
+//		Alloc:      decodePrealloc(goerliAllocData),
+//	}
+//}
+//
+//// DefaultSepoliaGenesisBlock returns the Sepolia network genesis block.
+//func DefaultSepoliaGenesisBlock() *Genesis {
+//	return &Genesis{
+//		Config:     params.SepoliaChainConfig,
+//		Nonce:      0,
+//		ExtraData:  []byte("Sepolia, Athens, Attica, Greece!"),
+//		GasLimit:   0x1c9c380,
+//		Difficulty: big.NewInt(0x20000),
+//		Timestamp:  1633267481,
+//		Alloc:      decodePrealloc(sepoliaAllocData),
+//	}
+//}
 
 // DefaultKilnGenesisBlock returns the kiln network genesis block.
 func DefaultKilnGenesisBlock() *Genesis {

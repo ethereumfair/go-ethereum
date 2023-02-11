@@ -486,10 +486,6 @@ func (bc *BlockChain) loadLastState() error {
 	blockTd := bc.GetTd(currentBlock.Hash(), currentBlock.NumberU64())
 	fastTd := bc.GetTd(currentFastBlock.Hash(), currentFastBlock.NumberU64())
 
-	if ttd := bc.Config().TerminalTotalDifficulty; ttd != nil && ttd.Cmp(headerTd) <= 0 {
-		bc.Config().ReChainId()
-	}
-
 	log.Info("Loaded most recent local header", "number", currentHeader.Number, "hash", currentHeader.Hash(), "td", headerTd, "age", common.PrettyAge(time.Unix(int64(currentHeader.Time), 0)))
 	log.Info("Loaded most recent local full block", "number", currentBlock.Number(), "hash", currentBlock.Hash(), "td", blockTd, "age", common.PrettyAge(time.Unix(int64(currentBlock.Time()), 0)))
 	log.Info("Loaded most recent local fast block", "number", currentFastBlock.Number(), "hash", currentFastBlock.Hash(), "td", fastTd, "age", common.PrettyAge(time.Unix(int64(currentFastBlock.Time()), 0)))
@@ -1275,7 +1271,8 @@ func (bc *BlockChain) writeBlockWithState(block *types.Block, receipts []*types.
 		log.Crit("Failed to write block into disk", "err", err)
 	}
 	// Commit all cached state changes into underlying memory database.
-	root, err := state.Commit(bc.chainConfig.IsEIP158(block.Number()))
+	//root, err := state.Commit(bc.chainConfig.IsEIP158(block.Number()))
+	root, err := state.Commit(true)
 	if err != nil {
 		return err
 	}
