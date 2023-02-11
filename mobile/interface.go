@@ -22,7 +22,7 @@ import (
 	"errors"
 	"math/big"
 
-	"github.com/ethereumfair/go-ethereum/common"
+	"github.com/dogecoinw/go-dogecoin/common"
 )
 
 // Interface represents a wrapped version of Go's interface{}, with the capacity

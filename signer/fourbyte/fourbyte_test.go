@@ -21,8 +21,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/accounts/abi"
-	"github.com/ethereumfair/go-ethereum/common"
+	"github.com/dogecoinw/go-dogecoin/accounts/abi"
+	"github.com/dogecoinw/go-dogecoin/common"
 )
 
 // Tests that all the selectors contained in the 4byte database are valid.

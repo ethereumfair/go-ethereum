@@ -21,8 +21,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 )
 
 // StartHTTPEndpoint starts the HTTP RPC endpoint.

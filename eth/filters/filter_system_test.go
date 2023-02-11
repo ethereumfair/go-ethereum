@@ -26,17 +26,16 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/consensus/ethash"
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/core/bloombits"
-	"github.com/ethereumfair/go-ethereum/core/rawdb"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/ethdb"
-	"github.com/ethereumfair/go-ethereum/event"
-	"github.com/ethereumfair/go-ethereum/params"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/consensus/ethash"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/core/bloombits"
+	"github.com/dogecoinw/go-dogecoin/core/rawdb"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/ethdb"
+	"github.com/dogecoinw/go-dogecoin/event"
+	"github.com/dogecoinw/go-dogecoin/params"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 )
 
 type testBackend struct {

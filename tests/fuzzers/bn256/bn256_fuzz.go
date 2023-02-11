@@ -26,8 +26,8 @@ import (
 	"math/big"
 
 	"github.com/consensys/gnark-crypto/ecc/bn254"
-	cloudflare "github.com/ethereumfair/go-ethereum/crypto/bn256/cloudflare"
-	google "github.com/ethereumfair/go-ethereum/crypto/bn256/google"
+	cloudflare "github.com/dogecoinw/go-dogecoin/crypto/bn256/cloudflare"
+	google "github.com/dogecoinw/go-dogecoin/crypto/bn256/google"
 )
 
 func getG1Points(input io.Reader) (*cloudflare.G1, *google.G1, *bn254.G1Affine) {

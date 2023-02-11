@@ -23,21 +23,21 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/accounts/abi"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/consensus"
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/core/asm"
-	"github.com/ethereumfair/go-ethereum/core/rawdb"
-	"github.com/ethereumfair/go-ethereum/core/state"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/core/vm"
-	"github.com/ethereumfair/go-ethereum/eth/tracers"
-	"github.com/ethereumfair/go-ethereum/eth/tracers/logger"
-	"github.com/ethereumfair/go-ethereum/params"
+	"github.com/dogecoinw/go-dogecoin/accounts/abi"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/consensus"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/core/asm"
+	"github.com/dogecoinw/go-dogecoin/core/rawdb"
+	"github.com/dogecoinw/go-dogecoin/core/state"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/core/vm"
+	"github.com/dogecoinw/go-dogecoin/eth/tracers"
+	"github.com/dogecoinw/go-dogecoin/eth/tracers/logger"
+	"github.com/dogecoinw/go-dogecoin/params"
 
 	// force-load js tracers to trigger registration
-	_ "github.com/ethereumfair/go-ethereum/eth/tracers/js"
+	_ "github.com/dogecoinw/go-dogecoin/eth/tracers/js"
 )
 
 func TestDefaults(t *testing.T) {

@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/ethereumfair/go-ethereum/common"
+	"github.com/dogecoinw/go-dogecoin/common"
 	"golang.org/x/crypto/sha3"
 )
 
@@ -59,8 +59,7 @@ var (
 
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID:                 big.NewInt(1),
-		ChainIDEtf:              big.NewInt(513100),
+		ChainID:                 big.NewInt(22556),
 		HomesteadBlock:          big.NewInt(1_150_000),
 		DAOForkBlock:            big.NewInt(1_920_000),
 		DAOForkSupport:          true,

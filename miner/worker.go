@@ -25,16 +25,16 @@ import (
 	"time"
 
 	mapset "github.com/deckarep/golang-set"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/consensus"
-	"github.com/ethereumfair/go-ethereum/consensus/misc"
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/core/state"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/event"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/params"
-	"github.com/ethereumfair/go-ethereum/trie"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/consensus"
+	"github.com/dogecoinw/go-dogecoin/consensus/misc"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/core/state"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/event"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/params"
+	"github.com/dogecoinw/go-dogecoin/trie"
 )
 
 const (

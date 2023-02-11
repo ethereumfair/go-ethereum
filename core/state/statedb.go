@@ -24,15 +24,15 @@ import (
 	"sort"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/core/rawdb"
-	"github.com/ethereumfair/go-ethereum/core/state/snapshot"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/metrics"
-	"github.com/ethereumfair/go-ethereum/rlp"
-	"github.com/ethereumfair/go-ethereum/trie"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/core/rawdb"
+	"github.com/dogecoinw/go-dogecoin/core/state/snapshot"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/metrics"
+	"github.com/dogecoinw/go-dogecoin/rlp"
+	"github.com/dogecoinw/go-dogecoin/trie"
 )
 
 type revision struct {
@@ -600,8 +600,8 @@ func (s *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) 
 // CreateAccount is called during the EVM CREATE operation. The situation might arise that
 // a contract does the following:
 //
-//   1. sends funds to sha(account ++ (nonce + 1))
-//   2. tx_create(sha(account ++ nonce)) (note that this gets the address of 1)
+//  1. sends funds to sha(account ++ (nonce + 1))
+//  2. tx_create(sha(account ++ nonce)) (note that this gets the address of 1)
 //
 // Carrying over the balance ensures that Ether doesn't disappear.
 func (s *StateDB) CreateAccount(addr common.Address) {

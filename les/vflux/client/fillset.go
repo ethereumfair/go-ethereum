@@ -19,8 +19,8 @@ package client
 import (
 	"sync"
 
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/nodestate"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/nodestate"
 )
 
 // FillSet tries to read nodes from an input iterator and add them to a node set by

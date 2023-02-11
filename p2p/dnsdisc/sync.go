@@ -21,8 +21,8 @@ import (
 	"math/rand"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common/mclock"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/common/mclock"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
 )
 
 // This is the number of consecutive leaf requests that may fail before

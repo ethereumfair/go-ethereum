@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/dogecoinw/go-dogecoin/log"
 )
 
 // nginxDockerfile is theis the Dockerfile required to build an nginx reverse-

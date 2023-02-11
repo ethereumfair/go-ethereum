@@ -25,26 +25,26 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
-	"github.com/ethereumfair/go-ethereum/accounts"
-	"github.com/ethereumfair/go-ethereum/accounts/abi"
-	"github.com/ethereumfair/go-ethereum/accounts/keystore"
-	"github.com/ethereumfair/go-ethereum/accounts/scwallet"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/hexutil"
-	"github.com/ethereumfair/go-ethereum/common/math"
-	"github.com/ethereumfair/go-ethereum/consensus/ethash"
-	"github.com/ethereumfair/go-ethereum/consensus/misc"
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/core/state"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/core/vm"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/eth/tracers/logger"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/p2p"
-	"github.com/ethereumfair/go-ethereum/params"
-	"github.com/ethereumfair/go-ethereum/rlp"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/accounts"
+	"github.com/dogecoinw/go-dogecoin/accounts/abi"
+	"github.com/dogecoinw/go-dogecoin/accounts/keystore"
+	"github.com/dogecoinw/go-dogecoin/accounts/scwallet"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/hexutil"
+	"github.com/dogecoinw/go-dogecoin/common/math"
+	"github.com/dogecoinw/go-dogecoin/consensus/ethash"
+	"github.com/dogecoinw/go-dogecoin/consensus/misc"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/core/state"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/core/vm"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/eth/tracers/logger"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/p2p"
+	"github.com/dogecoinw/go-dogecoin/params"
+	"github.com/dogecoinw/go-dogecoin/rlp"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 	"github.com/tyler-smith/go-bip39"
 )
 
@@ -731,10 +731,10 @@ func (s *BlockChainAPI) GetHeaderByHash(ctx context.Context, hash common.Hash) m
 }
 
 // GetBlockByNumber returns the requested canonical block.
-// * When blockNr is -1 the chain head is returned.
-// * When blockNr is -2 the pending chain head is returned.
-// * When fullTx is true all transactions in the block are returned, otherwise
-//   only the transaction hash is returned.
+//   - When blockNr is -1 the chain head is returned.
+//   - When blockNr is -2 the pending chain head is returned.
+//   - When fullTx is true all transactions in the block are returned, otherwise
+//     only the transaction hash is returned.
 func (s *BlockChainAPI) GetBlockByNumber(ctx context.Context, number rpc.BlockNumber, fullTx bool) (map[string]interface{}, error) {
 	block, err := s.b.BlockByNumber(ctx, number)
 	if block != nil && err == nil {

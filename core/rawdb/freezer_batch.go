@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"sync/atomic"
 
-	"github.com/ethereumfair/go-ethereum/common/math"
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/common/math"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 	"github.com/golang/snappy"
 )
 

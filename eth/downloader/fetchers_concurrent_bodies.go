@@ -19,9 +19,9 @@ package downloader
 import (
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/eth/protocols/eth"
-	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/eth/protocols/eth"
+	"github.com/dogecoinw/go-dogecoin/log"
 )
 
 // bodyQueue implements typedQueue and is a type adapter between the generic

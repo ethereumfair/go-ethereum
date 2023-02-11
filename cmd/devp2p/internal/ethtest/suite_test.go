@@ -21,11 +21,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/eth"
-	"github.com/ethereumfair/go-ethereum/eth/ethconfig"
-	"github.com/ethereumfair/go-ethereum/internal/utesting"
-	"github.com/ethereumfair/go-ethereum/node"
-	"github.com/ethereumfair/go-ethereum/p2p"
+	"github.com/dogecoinw/go-dogecoin/eth"
+	"github.com/dogecoinw/go-dogecoin/eth/ethconfig"
+	"github.com/dogecoinw/go-dogecoin/internal/utesting"
+	"github.com/dogecoinw/go-dogecoin/node"
+	"github.com/dogecoinw/go-dogecoin/p2p"
 )
 
 var (

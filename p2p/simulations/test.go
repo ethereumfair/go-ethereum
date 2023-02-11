@@ -19,10 +19,10 @@ package simulations
 import (
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/p2p"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/enr"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/p2p"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/enr"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 )
 
 // NoopService is the service that does not do anything

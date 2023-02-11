@@ -23,12 +23,11 @@ import (
 	"runtime"
 	"runtime/debug"
 
-	"github.com/ethereumfair/go-ethereum"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/hexutil"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/p2p"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/hexutil"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/p2p"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 )
 
 // Client is a wrapper around rpc.Client that implements geth-specific functionality.

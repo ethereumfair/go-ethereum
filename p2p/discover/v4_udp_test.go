@@ -31,11 +31,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/internal/testlog"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/p2p/discover/v4wire"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/enr"
+	"github.com/dogecoinw/go-dogecoin/internal/testlog"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/p2p/discover/v4wire"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/enr"
 )
 
 // shared test variables

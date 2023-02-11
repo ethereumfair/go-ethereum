@@ -25,11 +25,11 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/bitutil"
-	"github.com/ethereumfair/go-ethereum/metrics"
-	"github.com/ethereumfair/go-ethereum/p2p/rlpx"
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/bitutil"
+	"github.com/dogecoinw/go-dogecoin/metrics"
+	"github.com/dogecoinw/go-dogecoin/p2p/rlpx"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 )
 
 const (

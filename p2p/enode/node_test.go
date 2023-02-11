@@ -24,8 +24,8 @@ import (
 	"testing"
 	"testing/quick"
 
-	"github.com/ethereumfair/go-ethereum/p2p/enr"
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/p2p/enr"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 	"github.com/stretchr/testify/assert"
 )
 

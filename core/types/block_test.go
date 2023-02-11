@@ -23,11 +23,11 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/math"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/params"
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/math"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/params"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 	"golang.org/x/crypto/sha3"
 )
 

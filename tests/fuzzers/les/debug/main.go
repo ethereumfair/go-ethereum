@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ethereumfair/go-ethereum/tests/fuzzers/les"
+	"github.com/dogecoinw/go-dogecoin/tests/fuzzers/les"
 )
 
 func main() {

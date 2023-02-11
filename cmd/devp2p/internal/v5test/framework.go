@@ -24,11 +24,11 @@ import (
 	"net"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common/mclock"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/p2p/discover/v5wire"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/enr"
+	"github.com/dogecoinw/go-dogecoin/common/mclock"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/p2p/discover/v5wire"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/enr"
 )
 
 // readError represents an error during packet reading.

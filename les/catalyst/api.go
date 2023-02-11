@@ -20,12 +20,12 @@ package catalyst
 import (
 	"errors"
 	"fmt"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/core/beacon"
-	"github.com/ethereumfair/go-ethereum/les"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/node"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/core/beacon"
+	"github.com/dogecoinw/go-dogecoin/les"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/node"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 )
 
 // Register adds catalyst APIs to the light client.

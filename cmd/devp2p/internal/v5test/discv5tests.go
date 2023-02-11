@@ -22,10 +22,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/internal/utesting"
-	"github.com/ethereumfair/go-ethereum/p2p/discover/v5wire"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/netutil"
+	"github.com/dogecoinw/go-dogecoin/internal/utesting"
+	"github.com/dogecoinw/go-dogecoin/p2p/discover/v5wire"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/netutil"
 )
 
 // Suite is the discv5 test suite.

@@ -19,7 +19,7 @@ package tests
 import (
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/params"
+	"github.com/dogecoinw/go-dogecoin/params"
 )
 
 func TestTransaction(t *testing.T) {

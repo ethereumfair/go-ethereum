@@ -30,8 +30,8 @@ import (
 	"text/template"
 	"unicode"
 
-	"github.com/ethereumfair/go-ethereum/accounts/abi"
-	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/dogecoinw/go-dogecoin/accounts/abi"
+	"github.com/dogecoinw/go-dogecoin/log"
 )
 
 // Lang is a target programming language selector to generate bindings for.

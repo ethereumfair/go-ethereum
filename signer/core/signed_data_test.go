@@ -26,13 +26,13 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/accounts/keystore"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/hexutil"
-	"github.com/ethereumfair/go-ethereum/common/math"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/signer/core"
-	"github.com/ethereumfair/go-ethereum/signer/core/apitypes"
+	"github.com/dogecoinw/go-dogecoin/accounts/keystore"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/hexutil"
+	"github.com/dogecoinw/go-dogecoin/common/math"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/signer/core"
+	"github.com/dogecoinw/go-dogecoin/signer/core/apitypes"
 )
 
 var typesStandard = apitypes.Types{

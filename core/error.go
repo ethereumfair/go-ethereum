@@ -19,7 +19,7 @@ package core
 import (
 	"errors"
 
-	"github.com/ethereumfair/go-ethereum/core/types"
+	"github.com/dogecoinw/go-dogecoin/core/types"
 )
 
 var (

@@ -22,14 +22,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/accounts"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/hexutil"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/internal/ethapi"
-	"github.com/ethereumfair/go-ethereum/signer/core"
-	"github.com/ethereumfair/go-ethereum/signer/core/apitypes"
-	"github.com/ethereumfair/go-ethereum/signer/storage"
+	"github.com/dogecoinw/go-dogecoin/accounts"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/hexutil"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/internal/ethapi"
+	"github.com/dogecoinw/go-dogecoin/signer/core"
+	"github.com/dogecoinw/go-dogecoin/signer/core/apitypes"
+	"github.com/dogecoinw/go-dogecoin/signer/storage"
 )
 
 const JS = `

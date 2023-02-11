@@ -19,21 +19,20 @@
 // Here is an example of creating a 2 node network with the first node
 // connected to the second:
 //
-//     $ p2psim node create
-//     Created node01
+//	$ p2psim node create
+//	Created node01
 //
-//     $ p2psim node start node01
-//     Started node01
+//	$ p2psim node start node01
+//	Started node01
 //
-//     $ p2psim node create
-//     Created node02
+//	$ p2psim node create
+//	Created node02
 //
-//     $ p2psim node start node02
-//     Started node02
+//	$ p2psim node start node02
+//	Started node02
 //
-//     $ p2psim node connect node01 node02
-//     Connected node01 to node02
-//
+//	$ p2psim node connect node01 node02
+//	Connected node01 to node02
 package main
 
 import (
@@ -45,13 +44,13 @@ import (
 	"strings"
 	"text/tabwriter"
 
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/internal/flags"
-	"github.com/ethereumfair/go-ethereum/p2p"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/simulations"
-	"github.com/ethereumfair/go-ethereum/p2p/simulations/adapters"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/internal/flags"
+	"github.com/dogecoinw/go-dogecoin/p2p"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/simulations"
+	"github.com/dogecoinw/go-dogecoin/p2p/simulations/adapters"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 	"github.com/urfave/cli/v2"
 )
 

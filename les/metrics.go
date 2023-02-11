@@ -17,8 +17,8 @@
 package les
 
 import (
-	"github.com/ethereumfair/go-ethereum/metrics"
-	"github.com/ethereumfair/go-ethereum/p2p"
+	"github.com/dogecoinw/go-dogecoin/metrics"
+	"github.com/dogecoinw/go-dogecoin/p2p"
 )
 
 var (

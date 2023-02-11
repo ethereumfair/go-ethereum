@@ -19,7 +19,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/dogecoinw/go-dogecoin/log"
 )
 
 // ensureVirtualHost checks whether a reverse-proxy is running on the specified

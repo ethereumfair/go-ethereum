@@ -7,12 +7,12 @@ import (
 	"math/big"
 	"strings"
 
-	ethereum "github.com/ethereumfair/go-ethereum"
-	"github.com/ethereumfair/go-ethereum/accounts/abi"
-	"github.com/ethereumfair/go-ethereum/accounts/abi/bind"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/core/types"
-	"github.com/ethereumfair/go-ethereum/event"
+	ethereum "github.com/dogecoinw/go-dogecoin"
+	"github.com/dogecoinw/go-dogecoin/accounts/abi"
+	"github.com/dogecoinw/go-dogecoin/accounts/abi/bind"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"github.com/dogecoinw/go-dogecoin/event"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.

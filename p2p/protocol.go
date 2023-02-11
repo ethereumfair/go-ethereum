@@ -19,8 +19,8 @@ package p2p
 import (
 	"fmt"
 
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/enr"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/enr"
 )
 
 // Protocol represents a P2P subprotocol implementation.

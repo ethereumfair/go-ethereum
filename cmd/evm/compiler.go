@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ethereumfair/go-ethereum/cmd/evm/internal/compiler"
+	"github.com/dogecoinw/go-dogecoin/cmd/evm/internal/compiler"
 
 	"github.com/urfave/cli/v2"
 )

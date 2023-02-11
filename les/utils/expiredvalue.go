@@ -20,7 +20,7 @@ import (
 	"math"
 	"sync"
 
-	"github.com/ethereumfair/go-ethereum/common/mclock"
+	"github.com/dogecoinw/go-dogecoin/common/mclock"
 )
 
 // ExpiredValue is a scalar value that is continuously expired (decreased

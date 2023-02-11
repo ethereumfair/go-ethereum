@@ -25,17 +25,17 @@ import (
 	"os"
 	"reflect"
 
-	"github.com/ethereumfair/go-ethereum/accounts"
-	"github.com/ethereumfair/go-ethereum/accounts/keystore"
-	"github.com/ethereumfair/go-ethereum/accounts/scwallet"
-	"github.com/ethereumfair/go-ethereum/accounts/usbwallet"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/common/hexutil"
-	"github.com/ethereumfair/go-ethereum/internal/ethapi"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/rpc"
-	"github.com/ethereumfair/go-ethereum/signer/core/apitypes"
-	"github.com/ethereumfair/go-ethereum/signer/storage"
+	"github.com/dogecoinw/go-dogecoin/accounts"
+	"github.com/dogecoinw/go-dogecoin/accounts/keystore"
+	"github.com/dogecoinw/go-dogecoin/accounts/scwallet"
+	"github.com/dogecoinw/go-dogecoin/accounts/usbwallet"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/common/hexutil"
+	"github.com/dogecoinw/go-dogecoin/internal/ethapi"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/rpc"
+	"github.com/dogecoinw/go-dogecoin/signer/core/apitypes"
+	"github.com/dogecoinw/go-dogecoin/signer/storage"
 )
 
 const (

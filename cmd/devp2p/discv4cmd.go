@@ -22,13 +22,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/cmd/devp2p/internal/v4test"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/internal/flags"
-	"github.com/ethereumfair/go-ethereum/p2p/discover"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/params"
+	"github.com/dogecoinw/go-dogecoin/cmd/devp2p/internal/v4test"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/internal/flags"
+	"github.com/dogecoinw/go-dogecoin/p2p/discover"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/params"
 	"github.com/urfave/cli/v2"
 )
 

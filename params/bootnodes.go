@@ -16,28 +16,17 @@
 
 package params
 
-import "github.com/ethereumfair/go-ethereum/common"
+import "github.com/dogecoinw/go-dogecoin/common"
 
 // MainnetBootnodes are the enode URLs of the P2P bootstrap nodes running on
 // the main Ethereum network.
 var MainnetBootnodes = []string{
 	// Ethereum Foundation Go Bootnodes
-	"enode://6b7f7fc5efc9ad2d8300c70a198eecc680935611f8518eea1e73d5215dcb28b19013eefcfb4feee1122a18d863490baca6feaf90ba9375d962bcb1d73f95aadc@47.254.174.151:30303",
-	"enode://1979c31ba87879378167c609863b9c17e6bef8dbdcb527ea81ab4e91f8fe47bd044aa41af916989028d128d52ad2753c993ab488dfce5a128a63cd1d7e74b602@8.210.201.21:30303",
-	"enode://6326ebc21146c25d3c31bb88fdffcc1be6adf51d6ae6f871f3228df228255c9d37f72d7a96d600e68b2b3e60b903bab9ea7ffe4b0190b05f52011d0ef83837f6@3.99.254.141:30303",
-	"enode://5e21e92d43126a9e950d6ace212627afed0d40e424227421d43046559453cf1d7d362a1122f955cab8de30fb07b79c9a7a504480355ad4578adb629022023fc7@39.103.177.160:33333",
-	"enode://003e7a565af587bb1104bbb76c1ba2e363a8d7eb064339d78c7119749f8663e482bd7b24142bc4219d6b04207dafa85ddf884adc960385d93a06da0e1533d1c8@18.224.200.26:30303",
-	"enode://a0c645aa3738f71b58f7445d6f63cc171e221911cacec2ad523d52d9c7ee956b275c2b781eaa7313bdef90d1d30a9352f43e67c8bcec7c49cdf9ab6bd91f6675@18.225.35.33:30303",
 }
 
 // RopstenBootnodes are the enode URLs of the P2P bootstrap nodes running on the
 // Ropsten test network.
-var RopstenBootnodes = []string{
-	"enode://30b7ab30a01c124a6cceca36863ece12c4f5fa68e3ba9b0b51407ccc002eeed3b3102d20a88f1c1d3c3154e2449317b8ef95090e77b312d5cc39354f86d5d606@52.176.7.10:30303",    // US-Azure geth
-	"enode://865a63255b3bb68023b6bffd5095118fcc13e79dcf014fe4e47e065c350c7cc72af2e53eff895f11ba1bbb6a2b33271c1116ee870f266618eadfc2e78aa7349c@52.176.100.77:30303",  // US-Azure parity
-	"enode://6332792c4a00e3e4ee0926ed89e0d27ef985424d97b6a45bf0f23e51f0dcb5e66b875777506458aea7af6f9e4ffb69f43f3778ee73c81ed9d34c51c4b16b0b0f@52.232.243.152:30303", // Parity
-	"enode://94c15d1b9e2fe7ce56e458b9a3b672ef11894ddedd0c6f247e0f1d3487f52b66208fb4aeb8179fce6e3a749ea93ed147c37976d67af557508d199d9594c35f09@192.81.208.223:30303", // @gpip
-}
+var RopstenBootnodes = []string{}
 
 // SepoliaBootnodes are the enode URLs of the P2P bootstrap nodes running on the
 // Sepolia test network.

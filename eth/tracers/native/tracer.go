@@ -27,9 +27,11 @@ Aside from implementing the tracer, it also needs to register itself, using the
 Example:
 
 ```golang
-func init() {
-	register("noopTracerNative", newNoopTracer)
-}
+
+	func init() {
+		register("noopTracerNative", newNoopTracer)
+	}
+
 ```
 */
 package native
@@ -38,7 +40,7 @@ import (
 	"encoding/json"
 	"errors"
 
-	"github.com/ethereumfair/go-ethereum/eth/tracers"
+	"github.com/dogecoinw/go-dogecoin/eth/tracers"
 )
 
 // init registers itself this packages as a lookup for tracers.

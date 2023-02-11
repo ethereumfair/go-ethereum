@@ -19,7 +19,7 @@ package core
 import (
 	"runtime"
 
-	"github.com/ethereumfair/go-ethereum/core/types"
+	"github.com/dogecoinw/go-dogecoin/core/types"
 )
 
 // senderCacher is a concurrent transaction sender recoverer and cacher.

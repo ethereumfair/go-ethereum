@@ -21,7 +21,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/ethereumfair/go-ethereum/core/vm"
+	"github.com/dogecoinw/go-dogecoin/core/vm"
 )
 
 // Iterator for disassembled EVM instructions

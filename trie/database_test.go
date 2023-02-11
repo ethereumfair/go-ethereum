@@ -19,8 +19,8 @@ package trie
 import (
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/ethdb/memorydb"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/ethdb/memorydb"
 )
 
 // Tests that the trie database returns a missing trie node error if attempting

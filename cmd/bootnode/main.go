@@ -24,13 +24,13 @@ import (
 	"net"
 	"os"
 
-	"github.com/ethereumfair/go-ethereum/cmd/utils"
-	"github.com/ethereumfair/go-ethereum/crypto"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/p2p/discover"
-	"github.com/ethereumfair/go-ethereum/p2p/enode"
-	"github.com/ethereumfair/go-ethereum/p2p/nat"
-	"github.com/ethereumfair/go-ethereum/p2p/netutil"
+	"github.com/dogecoinw/go-dogecoin/cmd/utils"
+	"github.com/dogecoinw/go-dogecoin/crypto"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/p2p/discover"
+	"github.com/dogecoinw/go-dogecoin/p2p/enode"
+	"github.com/dogecoinw/go-dogecoin/p2p/nat"
+	"github.com/dogecoinw/go-dogecoin/p2p/netutil"
 )
 
 func main() {

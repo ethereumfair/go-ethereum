@@ -19,7 +19,7 @@ package event_test
 import (
 	"fmt"
 
-	"github.com/ethereumfair/go-ethereum/event"
+	"github.com/dogecoinw/go-dogecoin/event"
 )
 
 func ExampleFeed_acknowledgedEvents() {

@@ -18,11 +18,11 @@ package downloader
 
 import (
 	"context"
-	"sync"
 
-	"github.com/ethereumfair/go-ethereum"
-	"github.com/ethereumfair/go-ethereum/event"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin"
+	"github.com/dogecoinw/go-dogecoin/event"
+	"github.com/dogecoinw/go-dogecoin/rpc"
+	"sync"
 )
 
 // DownloaderAPI provides an API which gives information about the current synchronisation status.
@@ -122,7 +122,7 @@ func (api *DownloaderAPI) Syncing(ctx context.Context) (*rpc.Subscription, error
 // SyncingResult provides information about the current synchronisation status for this node.
 type SyncingResult struct {
 	Syncing bool                  `json:"syncing"`
-	Status  ethereum.SyncProgress `json:"status"`
+	Status  dogecoin.SyncProgress `json:"status"`
 }
 
 // uninstallSyncSubscriptionRequest uninstalls a syncing subscription in the API event loop.

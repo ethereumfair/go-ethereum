@@ -1,4 +1,4 @@
-module github.com/ethereumfair/go-ethereum
+module github.com/dogecoinw/go-dogecoin
 
 go 1.18
 

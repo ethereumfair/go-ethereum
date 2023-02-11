@@ -22,7 +22,7 @@ import (
 	"io"
 	"net"
 
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 )
 
 // Entry is implemented by known node record entry types.

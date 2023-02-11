@@ -17,8 +17,8 @@
 package core
 
 import (
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/core/types"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/core/types"
 )
 
 // NewTxsEvent is posted when a batch of transactions enter the transaction pool.

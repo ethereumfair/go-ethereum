@@ -16,7 +16,7 @@
 
 package state
 
-import "github.com/ethereumfair/go-ethereum/metrics"
+import "github.com/dogecoinw/go-dogecoin/metrics"
 
 var (
 	accountUpdatedMeter        = metrics.NewRegisteredMeter("state/update/account", nil)

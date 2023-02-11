@@ -24,17 +24,17 @@ import (
 	"fmt"
 	"path/filepath"
 
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/eth/downloader"
-	"github.com/ethereumfair/go-ethereum/eth/ethconfig"
-	"github.com/ethereumfair/go-ethereum/ethclient"
-	"github.com/ethereumfair/go-ethereum/ethstats"
-	"github.com/ethereumfair/go-ethereum/internal/debug"
-	"github.com/ethereumfair/go-ethereum/les"
-	"github.com/ethereumfair/go-ethereum/node"
-	"github.com/ethereumfair/go-ethereum/p2p"
-	"github.com/ethereumfair/go-ethereum/p2p/nat"
-	"github.com/ethereumfair/go-ethereum/params"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/eth/downloader"
+	"github.com/dogecoinw/go-dogecoin/eth/ethconfig"
+	"github.com/dogecoinw/go-dogecoin/ethclient"
+	"github.com/dogecoinw/go-dogecoin/ethstats"
+	"github.com/dogecoinw/go-dogecoin/internal/debug"
+	"github.com/dogecoinw/go-dogecoin/les"
+	"github.com/dogecoinw/go-dogecoin/node"
+	"github.com/dogecoinw/go-dogecoin/p2p"
+	"github.com/dogecoinw/go-dogecoin/p2p/nat"
+	"github.com/dogecoinw/go-dogecoin/params"
 )
 
 // NodeConfig represents the collection of configuration values to fine tune the Geth

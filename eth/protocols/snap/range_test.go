@@ -19,7 +19,7 @@ package snap
 import (
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/common"
+	"github.com/dogecoinw/go-dogecoin/common"
 )
 
 // Tests that given a starting hash and a density, the hash ranger can correctly

@@ -22,8 +22,8 @@ import (
 	"math/big"
 	"os"
 
-	"github.com/ethereumfair/go-ethereum/cmd/evm/internal/t8ntool"
-	"github.com/ethereumfair/go-ethereum/internal/flags"
+	"github.com/dogecoinw/go-dogecoin/cmd/evm/internal/t8ntool"
+	"github.com/dogecoinw/go-dogecoin/internal/flags"
 	"github.com/urfave/cli/v2"
 )
 

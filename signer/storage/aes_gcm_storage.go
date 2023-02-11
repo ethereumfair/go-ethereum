@@ -24,7 +24,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/dogecoinw/go-dogecoin/log"
 )
 
 type storedCredential struct {

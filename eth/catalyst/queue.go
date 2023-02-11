@@ -20,9 +20,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/core/beacon"
-	"github.com/ethereumfair/go-ethereum/core/types"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/core/beacon"
+	"github.com/dogecoinw/go-dogecoin/core/types"
 )
 
 // maxTrackedPayloads is the maximum number of prepared payloads the execution

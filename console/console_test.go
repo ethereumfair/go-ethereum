@@ -25,15 +25,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/consensus/ethash"
-	"github.com/ethereumfair/go-ethereum/console/prompt"
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/eth"
-	"github.com/ethereumfair/go-ethereum/eth/ethconfig"
-	"github.com/ethereumfair/go-ethereum/internal/jsre"
-	"github.com/ethereumfair/go-ethereum/miner"
-	"github.com/ethereumfair/go-ethereum/node"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/consensus/ethash"
+	"github.com/dogecoinw/go-dogecoin/console/prompt"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/eth"
+	"github.com/dogecoinw/go-dogecoin/eth/ethconfig"
+	"github.com/dogecoinw/go-dogecoin/internal/jsre"
+	"github.com/dogecoinw/go-dogecoin/miner"
+	"github.com/dogecoinw/go-dogecoin/node"
 )
 
 const (

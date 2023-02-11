@@ -24,13 +24,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dogecoinw/go-dogecoin/accounts/scwallet"
+	"github.com/dogecoinw/go-dogecoin/accounts/usbwallet"
+	"github.com/dogecoinw/go-dogecoin/common/hexutil"
+	"github.com/dogecoinw/go-dogecoin/console/prompt"
+	"github.com/dogecoinw/go-dogecoin/internal/jsre"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 	"github.com/dop251/goja"
-	"github.com/ethereumfair/go-ethereum/accounts/scwallet"
-	"github.com/ethereumfair/go-ethereum/accounts/usbwallet"
-	"github.com/ethereumfair/go-ethereum/common/hexutil"
-	"github.com/ethereumfair/go-ethereum/console/prompt"
-	"github.com/ethereumfair/go-ethereum/internal/jsre"
-	"github.com/ethereumfair/go-ethereum/rpc"
 )
 
 // bridge is a collection of JavaScript utility methods to bride the .js runtime

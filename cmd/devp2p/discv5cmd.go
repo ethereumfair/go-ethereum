@@ -20,9 +20,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/cmd/devp2p/internal/v5test"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/p2p/discover"
+	"github.com/dogecoinw/go-dogecoin/cmd/devp2p/internal/v5test"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/p2p/discover"
 	"github.com/urfave/cli/v2"
 )
 

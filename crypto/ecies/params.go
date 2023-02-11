@@ -42,7 +42,7 @@ import (
 	"fmt"
 	"hash"
 
-	ethcrypto "github.com/ethereumfair/go-ethereum/crypto"
+	ethcrypto "github.com/dogecoinw/go-dogecoin/crypto"
 )
 
 var (

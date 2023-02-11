@@ -16,7 +16,7 @@
 
 package snapshot
 
-import "github.com/ethereumfair/go-ethereum/metrics"
+import "github.com/dogecoinw/go-dogecoin/metrics"
 
 // Metrics in generation
 var (

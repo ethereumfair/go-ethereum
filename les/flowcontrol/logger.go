@@ -20,7 +20,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/common/mclock"
+	"github.com/dogecoinw/go-dogecoin/common/mclock"
 )
 
 // logger collects events in string format and discards events older than the

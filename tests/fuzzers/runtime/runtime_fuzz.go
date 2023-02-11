@@ -17,7 +17,7 @@
 package runtime
 
 import (
-	"github.com/ethereumfair/go-ethereum/core/vm/runtime"
+	"github.com/dogecoinw/go-dogecoin/core/vm/runtime"
 )
 
 // Fuzz is the basic entry point for the go-fuzz tool

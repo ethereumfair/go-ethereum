@@ -21,8 +21,8 @@ import (
 	"math"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/les/utils"
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/les/utils"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 )
 
 const (

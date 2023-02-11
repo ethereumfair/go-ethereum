@@ -22,9 +22,9 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/ethereumfair/go-ethereum/common/fdlimit"
-	"github.com/ethereumfair/go-ethereum/internal/flags"
-	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/dogecoinw/go-dogecoin/common/fdlimit"
+	"github.com/dogecoinw/go-dogecoin/internal/flags"
+	"github.com/dogecoinw/go-dogecoin/log"
 	"github.com/urfave/cli/v2"
 )
 

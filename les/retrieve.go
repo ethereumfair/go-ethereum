@@ -22,7 +22,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/ethereumfair/go-ethereum/light"
+	"github.com/dogecoinw/go-dogecoin/light"
 )
 
 var (

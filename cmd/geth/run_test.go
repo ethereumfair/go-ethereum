@@ -24,8 +24,8 @@ import (
 	"time"
 
 	"github.com/docker/docker/pkg/reexec"
-	"github.com/ethereumfair/go-ethereum/internal/cmdtest"
-	"github.com/ethereumfair/go-ethereum/rpc"
+	"github.com/dogecoinw/go-dogecoin/internal/cmdtest"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 )
 
 type testgeth struct {

@@ -33,11 +33,11 @@ import (
 	"time"
 	"unsafe"
 
+	"github.com/dogecoinw/go-dogecoin/consensus"
+	"github.com/dogecoinw/go-dogecoin/log"
+	"github.com/dogecoinw/go-dogecoin/metrics"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 	"github.com/edsrzf/mmap-go"
-	"github.com/ethereumfair/go-ethereum/consensus"
-	"github.com/ethereumfair/go-ethereum/log"
-	"github.com/ethereumfair/go-ethereum/metrics"
-	"github.com/ethereumfair/go-ethereum/rpc"
 	"github.com/hashicorp/golang-lru/simplelru"
 )
 

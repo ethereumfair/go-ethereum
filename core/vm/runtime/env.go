@@ -17,8 +17,8 @@
 package runtime
 
 import (
-	"github.com/ethereumfair/go-ethereum/core"
-	"github.com/ethereumfair/go-ethereum/core/vm"
+	"github.com/dogecoinw/go-dogecoin/core"
+	"github.com/dogecoinw/go-dogecoin/core/vm"
 )
 
 func NewEnv(cfg *Config) *vm.EVM {

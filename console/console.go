@@ -29,12 +29,12 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/dogecoinw/go-dogecoin/console/prompt"
+	"github.com/dogecoinw/go-dogecoin/internal/jsre"
+	"github.com/dogecoinw/go-dogecoin/internal/jsre/deps"
+	"github.com/dogecoinw/go-dogecoin/internal/web3ext"
+	"github.com/dogecoinw/go-dogecoin/rpc"
 	"github.com/dop251/goja"
-	"github.com/ethereumfair/go-ethereum/console/prompt"
-	"github.com/ethereumfair/go-ethereum/internal/jsre"
-	"github.com/ethereumfair/go-ethereum/internal/jsre/deps"
-	"github.com/ethereumfair/go-ethereum/internal/web3ext"
-	"github.com/ethereumfair/go-ethereum/rpc"
 	"github.com/mattn/go-colorable"
 	"github.com/peterh/liner"
 )

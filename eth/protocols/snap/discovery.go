@@ -17,7 +17,7 @@
 package snap
 
 import (
-	"github.com/ethereumfair/go-ethereum/rlp"
+	"github.com/dogecoinw/go-dogecoin/rlp"
 )
 
 // enrEntry is the ENR entry which advertises `snap` protocol on the discovery.

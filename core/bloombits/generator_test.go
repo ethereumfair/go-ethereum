@@ -21,7 +21,7 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/ethereumfair/go-ethereum/core/types"
+	"github.com/dogecoinw/go-dogecoin/core/types"
 )
 
 // Tests that batched bloom bits are correctly rotated from the input bloom

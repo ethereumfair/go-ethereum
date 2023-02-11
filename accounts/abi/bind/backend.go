@@ -19,11 +19,11 @@ package bind
 import (
 	"context"
 	"errors"
-	"math/big"
 
-	"github.com/ethereumfair/go-ethereum"
-	"github.com/ethereumfair/go-ethereum/common"
-	"github.com/ethereumfair/go-ethereum/core/types"
+	"github.com/dogecoinw/go-dogecoin"
+	"github.com/dogecoinw/go-dogecoin/common"
+	"github.com/dogecoinw/go-dogecoin/core/types"
+	"math/big"
 )
 
 var (
@@ -50,7 +50,7 @@ type ContractCaller interface {
 
 	// CallContract executes an Ethereum contract call with the specified data as the
 	// input.
-	CallContract(ctx context.Context, call ethereum.CallMsg, blockNumber *big.Int) ([]byte, error)
+	CallContract(ctx context.Context, call dogecoin.CallMsg, blockNumber *big.Int) ([]byte, error)
 }
 
 // PendingContractCaller defines methods to perform contract calls on the pending state.
@@ -61,7 +61,7 @@ type PendingContractCaller interface {
 	PendingCodeAt(ctx context.Context, contract common.Address) ([]byte, error)
 
 	// PendingCallContract executes an Ethereum contract call against the pending state.
-	PendingCallContract(ctx context.Context, call ethereum.CallMsg) ([]byte, error)
+	PendingCallContract(ctx context.Context, call dogecoin.CallMsg) ([]byte, error)
 }
 
 // ContractTransactor defines the methods needed to allow operating with a contract
@@ -92,7 +92,7 @@ type ContractTransactor interface {
 	// There is no guarantee that this is the true gas limit requirement as other
 	// transactions may be added or removed by miners, but it should provide a basis
 	// for setting a reasonable default.
-	EstimateGas(ctx context.Context, call ethereum.CallMsg) (gas uint64, err error)
+	EstimateGas(ctx context.Context, call dogecoin.CallMsg) (gas uint64, err error)
 
 	// SendTransaction injects the transaction into the pending pool for execution.
 	SendTransaction(ctx context.Context, tx *types.Transaction) error
@@ -105,11 +105,11 @@ type ContractFilterer interface {
 	// returning all the results in one batch.
 	//
 	// TODO(karalabe): Deprecate when the subscription one can return past data too.
-	FilterLogs(ctx context.Context, query ethereum.FilterQuery) ([]types.Log, error)
+	FilterLogs(ctx context.Context, query dogecoin.FilterQuery) ([]types.Log, error)
 
 	// SubscribeFilterLogs creates a background log filtering operation, returning
 	// a subscription immediately, which can be used to stream the found events.
-	SubscribeFilterLogs(ctx context.Context, query ethereum.FilterQuery, ch chan<- types.Log) (ethereum.Subscription, error)
+	SubscribeFilterLogs(ctx context.Context, query dogecoin.FilterQuery, ch chan<- types.Log) (dogecoin.Subscription, error)
 }
 
 // DeployBackend wraps the operations needed by WaitMined and WaitDeployed.
