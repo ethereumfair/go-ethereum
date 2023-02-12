@@ -42,8 +42,7 @@ var (
 	//FrontierBlockReward           = big.NewInt(5e+18) // Block reward in wei for successfully mining a block
 	//ByzantiumBlockReward          = big.NewInt(3e+18) // Block reward in wei for successfully mining a block upward from Byzantium
 	//ConstantinopleBlockReward     = big.NewInt(2e+18) // Block reward in wei for successfully mining a block upward from Constantinople
-	big18e                        = big.NewInt(0).Exp(big.NewInt(10), big.NewInt(18), nil)
-	DogeReward                    = big18e.Mul(big18e, big.NewInt(2500))
+	DogeReward                    = new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil), big.NewInt(2500))
 	maxUncles                     = 0         // Maximum number of uncles allowed in a single block
 	allowedFutureBlockTimeSeconds = int64(15) // Max seconds from current time allowed for blocks, before they're considered future blocks
 
