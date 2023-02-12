@@ -602,32 +602,32 @@ func (b *SimulatedBackend) callContract(ctx context.Context, call dogecoin.CallM
 		return nil, errors.New("both gasPrice and (maxFeePerGas or maxPriorityFeePerGas) specified")
 	}
 	head := b.blockchain.CurrentHeader()
-	if !b.blockchain.Config().IsLondon(head.Number) {
-		// If there's no basefee, then it must be a non-1559 execution
-		if call.GasPrice == nil {
-			call.GasPrice = new(big.Int)
-		}
+	//if !b.blockchain.Config().IsLondon(head.Number) {
+	//	// If there's no basefee, then it must be a non-1559 execution
+	//	if call.GasPrice == nil {
+	//		call.GasPrice = new(big.Int)
+	//	}
+	//	call.GasFeeCap, call.GasTipCap = call.GasPrice, call.GasPrice
+	//} else {
+	// A basefee is provided, necessitating 1559-type execution
+	if call.GasPrice != nil {
+		// User specified the legacy gas field, convert to 1559 gas typing
 		call.GasFeeCap, call.GasTipCap = call.GasPrice, call.GasPrice
 	} else {
-		// A basefee is provided, necessitating 1559-type execution
-		if call.GasPrice != nil {
-			// User specified the legacy gas field, convert to 1559 gas typing
-			call.GasFeeCap, call.GasTipCap = call.GasPrice, call.GasPrice
-		} else {
-			// User specified 1559 gas fields (or none), use those
-			if call.GasFeeCap == nil {
-				call.GasFeeCap = new(big.Int)
-			}
-			if call.GasTipCap == nil {
-				call.GasTipCap = new(big.Int)
-			}
-			// Backfill the legacy gasPrice for EVM execution, unless we're all zeroes
-			call.GasPrice = new(big.Int)
-			if call.GasFeeCap.BitLen() > 0 || call.GasTipCap.BitLen() > 0 {
-				call.GasPrice = math.BigMin(new(big.Int).Add(call.GasTipCap, head.BaseFee), call.GasFeeCap)
-			}
+		// User specified 1559 gas fields (or none), use those
+		if call.GasFeeCap == nil {
+			call.GasFeeCap = new(big.Int)
+		}
+		if call.GasTipCap == nil {
+			call.GasTipCap = new(big.Int)
+		}
+		// Backfill the legacy gasPrice for EVM execution, unless we're all zeroes
+		call.GasPrice = new(big.Int)
+		if call.GasFeeCap.BitLen() > 0 || call.GasTipCap.BitLen() > 0 {
+			call.GasPrice = math.BigMin(new(big.Int).Add(call.GasTipCap, head.BaseFee), call.GasFeeCap)
 		}
 	}
+	//}
 	// Ensure message is initialized properly.
 	if call.Gas == 0 {
 		call.Gas = 50000000

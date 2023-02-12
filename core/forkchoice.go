@@ -82,20 +82,6 @@ func (f *ForkChoice) ReorgNeeded(current *types.Header, header *types.Header) (b
 	if localTD == nil || externTd == nil {
 		return false, errors.New("missing td")
 	}
-	// Accept the new header as the chain head if the transition
-	// is already triggered. We assume all the headers after the
-	// transition come from the trusted consensus layer.
-	//if ttd := f.chain.Config().TerminalTotalDifficulty; !f.chain.Config().TerminalTotalDifficultyPassed && ttd != nil && ttd.Cmp(externTd) <= 0 {
-	//	//f.chain.Config().SetRome(new(big.Int).Add(header.Number, big.NewInt(1)))
-	//	f.chain.Config().ReChainId()
-	//	f.chain.Config().TerminalTotalDifficultyPassed = true
-	//}
-
-	if f.chain.Config().RomeBlock.Cmp(header.Number) > 0 {
-		f.chain.Config().ChainID = big.NewInt(1)
-	} else {
-		f.chain.Config().ReChainId()
-	}
 
 	// If the total difficulty is higher than our known, add it to the canonical chain
 	// Second clause in the if statement reduces the vulnerability to selfish mining.

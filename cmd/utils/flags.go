@@ -40,7 +40,6 @@ import (
 	"github.com/dogecoinw/go-dogecoin/core/vm"
 	"github.com/dogecoinw/go-dogecoin/crypto"
 	"github.com/dogecoinw/go-dogecoin/eth"
-	ethcatalyst "github.com/dogecoinw/go-dogecoin/eth/catalyst"
 	"github.com/dogecoinw/go-dogecoin/eth/downloader"
 	"github.com/dogecoinw/go-dogecoin/eth/ethconfig"
 	"github.com/dogecoinw/go-dogecoin/eth/filters"
@@ -53,7 +52,6 @@ import (
 	"github.com/dogecoinw/go-dogecoin/internal/ethapi"
 	"github.com/dogecoinw/go-dogecoin/internal/flags"
 	"github.com/dogecoinw/go-dogecoin/les"
-	lescatalyst "github.com/dogecoinw/go-dogecoin/les/catalyst"
 	"github.com/dogecoinw/go-dogecoin/log"
 	"github.com/dogecoinw/go-dogecoin/metrics"
 	"github.com/dogecoinw/go-dogecoin/metrics/exp"
@@ -128,31 +126,31 @@ var (
 		Usage:    "Ethereum mainnet",
 		Category: flags.EthCategory,
 	}
-	RopstenFlag = &cli.BoolFlag{
-		Name:     "ropsten",
-		Usage:    "Ropsten network: pre-configured proof-of-stake test network",
+	TestnetFlag = &cli.BoolFlag{
+		Name:     "testnet",
+		Usage:    "testnet network: pre-configured proof-of-stake test network",
 		Category: flags.EthCategory,
 	}
-	RinkebyFlag = &cli.BoolFlag{
-		Name:     "rinkeby",
-		Usage:    "Rinkeby network: pre-configured proof-of-authority test network",
-		Category: flags.EthCategory,
-	}
-	GoerliFlag = &cli.BoolFlag{
-		Name:     "goerli",
-		Usage:    "Görli network: pre-configured proof-of-authority test network",
-		Category: flags.EthCategory,
-	}
-	SepoliaFlag = &cli.BoolFlag{
-		Name:     "sepolia",
-		Usage:    "Sepolia network: pre-configured proof-of-work test network",
-		Category: flags.EthCategory,
-	}
-	KilnFlag = &cli.BoolFlag{
-		Name:     "kiln",
-		Usage:    "Kiln network: pre-configured proof-of-work to proof-of-stake test network",
-		Category: flags.EthCategory,
-	}
+	//RinkebyFlag = &cli.BoolFlag{
+	//	Name:     "rinkeby",
+	//	Usage:    "Rinkeby network: pre-configured proof-of-authority test network",
+	//	Category: flags.EthCategory,
+	//}
+	//GoerliFlag = &cli.BoolFlag{
+	//	Name:     "goerli",
+	//	Usage:    "Görli network: pre-configured proof-of-authority test network",
+	//	Category: flags.EthCategory,
+	//}
+	//SepoliaFlag = &cli.BoolFlag{
+	//	Name:     "sepolia",
+	//	Usage:    "Sepolia network: pre-configured proof-of-work test network",
+	//	Category: flags.EthCategory,
+	//}
+	//KilnFlag = &cli.BoolFlag{
+	//	Name:     "kiln",
+	//	Usage:    "Kiln network: pre-configured proof-of-work to proof-of-stake test network",
+	//	Category: flags.EthCategory,
+	//}
 
 	// Dev mode
 	DeveloperFlag = &cli.BoolFlag{
@@ -982,11 +980,11 @@ var (
 var (
 	// TestnetFlags is the flag group of all built-in supported testnets.
 	TestnetFlags = []cli.Flag{
-		RopstenFlag,
-		RinkebyFlag,
-		GoerliFlag,
-		SepoliaFlag,
-		KilnFlag,
+		TestnetFlag,
+		//RinkebyFlag,
+		//GoerliFlag,
+		//SepoliaFlag,
+		//KilnFlag,
 	}
 	// NetworkFlags is the flag group of all built-in supported networks.
 	NetworkFlags = append([]cli.Flag{
@@ -1006,23 +1004,23 @@ var (
 // then a subdirectory of the specified datadir will be used.
 func MakeDataDir(ctx *cli.Context) string {
 	if path := ctx.String(DataDirFlag.Name); path != "" {
-		if ctx.Bool(RopstenFlag.Name) {
+		if ctx.Bool(TestnetFlag.Name) {
 			// Maintain compatibility with older Geth configurations storing the
 			// Ropsten database in `testnet` instead of `ropsten`.
-			return filepath.Join(path, "ropsten")
+			return filepath.Join(path, "testnet")
 		}
-		if ctx.Bool(RinkebyFlag.Name) {
-			return filepath.Join(path, "rinkeby")
-		}
-		if ctx.Bool(GoerliFlag.Name) {
-			return filepath.Join(path, "goerli")
-		}
-		if ctx.Bool(SepoliaFlag.Name) {
-			return filepath.Join(path, "sepolia")
-		}
-		if ctx.Bool(KilnFlag.Name) {
-			return filepath.Join(path, "kiln")
-		}
+		//if ctx.Bool(RinkebyFlag.Name) {
+		//	return filepath.Join(path, "rinkeby")
+		//}
+		//if ctx.Bool(GoerliFlag.Name) {
+		//	return filepath.Join(path, "goerli")
+		//}
+		//if ctx.Bool(SepoliaFlag.Name) {
+		//	return filepath.Join(path, "sepolia")
+		//}
+		//if ctx.Bool(KilnFlag.Name) {
+		//	return filepath.Join(path, "kiln")
+		//}
 		return path
 	}
 	Fatalf("Cannot determine default data directory, please set manually (--datadir)")
@@ -1069,16 +1067,16 @@ func setBootstrapNodes(ctx *cli.Context, cfg *p2p.Config) {
 	switch {
 	case ctx.IsSet(BootnodesFlag.Name):
 		urls = SplitAndTrim(ctx.String(BootnodesFlag.Name))
-	case ctx.Bool(RopstenFlag.Name):
-		urls = params.RopstenBootnodes
-	case ctx.Bool(SepoliaFlag.Name):
-		urls = params.SepoliaBootnodes
-	case ctx.Bool(RinkebyFlag.Name):
-		urls = params.RinkebyBootnodes
-	case ctx.Bool(GoerliFlag.Name):
-		urls = params.GoerliBootnodes
-	case ctx.Bool(KilnFlag.Name):
-		urls = params.KilnBootnodes
+	case ctx.Bool(TestnetFlag.Name):
+		urls = params.TestnetBootnodes
+		//case ctx.Bool(SepoliaFlag.Name):
+		//	urls = params.SepoliaBootnodes
+		//case ctx.Bool(RinkebyFlag.Name):
+		//	urls = params.RinkebyBootnodes
+		//case ctx.Bool(GoerliFlag.Name):
+		//	urls = params.GoerliBootnodes
+		//case ctx.Bool(KilnFlag.Name):
+		//	urls = params.KilnBootnodes
 	}
 
 	// don't apply defaults if BootstrapNodes is already set
@@ -1517,26 +1515,26 @@ func SetDataDir(ctx *cli.Context, cfg *node.Config) {
 		cfg.DataDir = ctx.String(DataDirFlag.Name)
 	case ctx.Bool(DeveloperFlag.Name):
 		cfg.DataDir = "" // unless explicitly requested, use memory databases
-	case ctx.Bool(RopstenFlag.Name) && cfg.DataDir == node.DefaultDataDir():
+	case ctx.Bool(TestnetFlag.Name) && cfg.DataDir == node.DefaultDataDir():
 		// Maintain compatibility with older Geth configurations storing the
 		// Ropsten database in `testnet` instead of `ropsten`.
 		legacyPath := filepath.Join(node.DefaultDataDir(), "testnet")
 		if common.FileExist(legacyPath) {
-			log.Warn("Using the deprecated `testnet` datadir. Future versions will store the Ropsten chain in `ropsten`.")
+			log.Warn("Using the deprecated `testnet` datadir. Future versions will store the testnet chain in `testnet`.")
 			cfg.DataDir = legacyPath
 		} else {
-			cfg.DataDir = filepath.Join(node.DefaultDataDir(), "ropsten")
+			cfg.DataDir = filepath.Join(node.DefaultDataDir(), "testnet")
 		}
 
-		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "ropsten")
-	case ctx.Bool(RinkebyFlag.Name) && cfg.DataDir == node.DefaultDataDir():
-		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "rinkeby")
-	case ctx.Bool(GoerliFlag.Name) && cfg.DataDir == node.DefaultDataDir():
-		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "goerli")
-	case ctx.Bool(SepoliaFlag.Name) && cfg.DataDir == node.DefaultDataDir():
-		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "sepolia")
-	case ctx.Bool(KilnFlag.Name) && cfg.DataDir == node.DefaultDataDir():
-		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "kiln")
+		cfg.DataDir = filepath.Join(node.DefaultDataDir(), "testnet")
+		//case ctx.Bool(RinkebyFlag.Name) && cfg.DataDir == node.DefaultDataDir():
+		//	cfg.DataDir = filepath.Join(node.DefaultDataDir(), "rinkeby")
+		//case ctx.Bool(GoerliFlag.Name) && cfg.DataDir == node.DefaultDataDir():
+		//	cfg.DataDir = filepath.Join(node.DefaultDataDir(), "goerli")
+		//case ctx.Bool(SepoliaFlag.Name) && cfg.DataDir == node.DefaultDataDir():
+		//	cfg.DataDir = filepath.Join(node.DefaultDataDir(), "sepolia")
+		//case ctx.Bool(KilnFlag.Name) && cfg.DataDir == node.DefaultDataDir():
+		//	cfg.DataDir = filepath.Join(node.DefaultDataDir(), "kiln")
 	}
 }
 
@@ -1727,7 +1725,7 @@ func CheckExclusive(ctx *cli.Context, args ...interface{}) {
 // SetEthConfig applies eth-related command line flags to the config.
 func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	// Avoid conflicting network flags
-	CheckExclusive(ctx, MainnetFlag, DeveloperFlag, RopstenFlag, RinkebyFlag, GoerliFlag, SepoliaFlag, KilnFlag)
+	CheckExclusive(ctx, MainnetFlag, DeveloperFlag, TestnetFlag)
 	CheckExclusive(ctx, LightServeFlag, SyncModeFlag, "light")
 	CheckExclusive(ctx, DeveloperFlag, ExternalSignerFlag) // Can't use both ephemeral unlocked and external signer
 	if ctx.String(GCModeFlag.Name) == "archive" && ctx.Uint64(TxLookupLimitFlag.Name) != 0 {
@@ -1864,50 +1862,50 @@ func SetEthConfig(ctx *cli.Context, stack *node.Node, cfg *ethconfig.Config) {
 	switch {
 	case ctx.Bool(MainnetFlag.Name):
 		if !ctx.IsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 513100
+			cfg.NetworkId = 22556
 		}
 		cfg.Genesis = core.DefaultGenesisBlock()
 		SetDNSDiscoveryDefaults(cfg, params.MainnetGenesisHash)
-	case ctx.Bool(RopstenFlag.Name):
+	case ctx.Bool(TestnetFlag.Name):
 		if !ctx.IsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 3
 		}
-		cfg.Genesis = core.DefaultRopstenGenesisBlock()
-		SetDNSDiscoveryDefaults(cfg, params.RopstenGenesisHash)
-	case ctx.Bool(SepoliaFlag.Name):
-		if !ctx.IsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 11155111
-		}
-		cfg.Genesis = core.DefaultSepoliaGenesisBlock()
-		SetDNSDiscoveryDefaults(cfg, params.SepoliaGenesisHash)
-	case ctx.Bool(RinkebyFlag.Name):
-		log.Warn("")
-		log.Warn("--------------------------------------------------------------------------------")
-		log.Warn("Please note, Rinkeby has been deprecated. It will still work for the time being,")
-		log.Warn("but there will be no further hard-forks shipped for it. Eventually the network")
-		log.Warn("will be permanently halted after the other networks transition through the merge")
-		log.Warn("and prove stable enough. For the most future proof testnet, choose Sepolia as")
-		log.Warn("your replacement environment (--sepolia instead of --rinkeby).")
-		log.Warn("--------------------------------------------------------------------------------")
-		log.Warn("")
-
-		if !ctx.IsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 4
-		}
-		cfg.Genesis = core.DefaultRinkebyGenesisBlock()
-		SetDNSDiscoveryDefaults(cfg, params.RinkebyGenesisHash)
-	case ctx.Bool(GoerliFlag.Name):
-		if !ctx.IsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 5
-		}
-		cfg.Genesis = core.DefaultGoerliGenesisBlock()
-		SetDNSDiscoveryDefaults(cfg, params.GoerliGenesisHash)
-	case ctx.Bool(KilnFlag.Name):
-		if !ctx.IsSet(NetworkIdFlag.Name) {
-			cfg.NetworkId = 1337802
-		}
-		cfg.Genesis = core.DefaultKilnGenesisBlock()
-		SetDNSDiscoveryDefaults(cfg, params.KilnGenesisHash)
+		cfg.Genesis = core.DefaultTestnetGenesisBlock()
+		SetDNSDiscoveryDefaults(cfg, params.TestnetGenesisHash)
+	//case ctx.Bool(SepoliaFlag.Name):
+	//	if !ctx.IsSet(NetworkIdFlag.Name) {
+	//		cfg.NetworkId = 11155111
+	//	}
+	//	cfg.Genesis = core.DefaultSepoliaGenesisBlock()
+	//	SetDNSDiscoveryDefaults(cfg, params.SepoliaGenesisHash)
+	//case ctx.Bool(RinkebyFlag.Name):
+	//	log.Warn("")
+	//	log.Warn("--------------------------------------------------------------------------------")
+	//	log.Warn("Please note, Rinkeby has been deprecated. It will still work for the time being,")
+	//	log.Warn("but there will be no further hard-forks shipped for it. Eventually the network")
+	//	log.Warn("will be permanently halted after the other networks transition through the merge")
+	//	log.Warn("and prove stable enough. For the most future proof testnet, choose Sepolia as")
+	//	log.Warn("your replacement environment (--sepolia instead of --rinkeby).")
+	//	log.Warn("--------------------------------------------------------------------------------")
+	//	log.Warn("")
+	//
+	//	if !ctx.IsSet(NetworkIdFlag.Name) {
+	//		cfg.NetworkId = 4
+	//	}
+	//	cfg.Genesis = core.DefaultRinkebyGenesisBlock()
+	//	SetDNSDiscoveryDefaults(cfg, params.RinkebyGenesisHash)
+	//case ctx.Bool(GoerliFlag.Name):
+	//	if !ctx.IsSet(NetworkIdFlag.Name) {
+	//		cfg.NetworkId = 5
+	//	}
+	//	cfg.Genesis = core.DefaultGoerliGenesisBlock()
+	//	SetDNSDiscoveryDefaults(cfg, params.GoerliGenesisHash)
+	//case ctx.Bool(KilnFlag.Name):
+	//	if !ctx.IsSet(NetworkIdFlag.Name) {
+	//		cfg.NetworkId = 1337802
+	//	}
+	//	cfg.Genesis = core.DefaultKilnGenesisBlock()
+	//	SetDNSDiscoveryDefaults(cfg, params.KilnGenesisHash)
 	case ctx.Bool(DeveloperFlag.Name):
 		if !ctx.IsSet(NetworkIdFlag.Name) {
 			cfg.NetworkId = 1337
@@ -1994,9 +1992,9 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (ethapi.Backend
 			Fatalf("Failed to register the Ethereum service: %v", err)
 		}
 		stack.RegisterAPIs(tracers.APIs(backend.ApiBackend))
-		if err := lescatalyst.Register(stack, backend); err != nil {
-			Fatalf("Failed to register the Engine API service: %v", err)
-		}
+		//if err := lescatalyst.Register(stack, backend); err != nil {
+		//	Fatalf("Failed to register the Engine API service: %v", err)
+		//}
 		return backend.ApiBackend, nil
 	}
 	backend, err := eth.New(stack, cfg)
@@ -2009,9 +2007,9 @@ func RegisterEthService(stack *node.Node, cfg *ethconfig.Config) (ethapi.Backend
 			Fatalf("Failed to create the LES server: %v", err)
 		}
 	}
-	if err := ethcatalyst.Register(stack, backend); err != nil {
-		Fatalf("Failed to register the Engine API service: %v", err)
-	}
+	//if err := ethcatalyst.Register(stack, backend); err != nil {
+	//	Fatalf("Failed to register the Engine API service: %v", err)
+	//}
 	stack.RegisterAPIs(tracers.APIs(backend.APIBackend))
 	return backend.APIBackend, backend
 }
@@ -2149,16 +2147,16 @@ func MakeGenesis(ctx *cli.Context) *core.Genesis {
 	switch {
 	case ctx.Bool(MainnetFlag.Name):
 		genesis = core.DefaultGenesisBlock()
-	case ctx.Bool(RopstenFlag.Name):
-		genesis = core.DefaultRopstenGenesisBlock()
-	case ctx.Bool(SepoliaFlag.Name):
-		genesis = core.DefaultSepoliaGenesisBlock()
-	case ctx.Bool(RinkebyFlag.Name):
-		genesis = core.DefaultRinkebyGenesisBlock()
-	case ctx.Bool(GoerliFlag.Name):
-		genesis = core.DefaultGoerliGenesisBlock()
-	case ctx.Bool(KilnFlag.Name):
-		genesis = core.DefaultKilnGenesisBlock()
+	case ctx.Bool(TestnetFlag.Name):
+		genesis = core.DefaultTestnetGenesisBlock()
+	//case ctx.Bool(SepoliaFlag.Name):
+	//	genesis = core.DefaultSepoliaGenesisBlock()
+	//case ctx.Bool(RinkebyFlag.Name):
+	//	genesis = core.DefaultRinkebyGenesisBlock()
+	//case ctx.Bool(GoerliFlag.Name):
+	//	genesis = core.DefaultGoerliGenesisBlock()
+	//case ctx.Bool(KilnFlag.Name):
+	//	genesis = core.DefaultKilnGenesisBlock()
 	case ctx.Bool(DeveloperFlag.Name):
 		Fatalf("Developer chains are ephemeral")
 	}

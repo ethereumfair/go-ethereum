@@ -882,12 +882,15 @@ func (w *worker) commitTransactions(env *environment, txs *types.TransactionsByP
 		from, _ := types.Sender(env.signer, tx)
 		// Check whether the tx is replay protected. If we're not in the EIP155 hf
 		// phase, start ignoring the sender until we do.
-		if tx.Protected() && !w.chainConfig.IsEIP155(env.header.Number) {
-			log.Trace("Ignoring reply protected transaction", "hash", tx.Hash(), "eip155", w.chainConfig.EIP155Block)
+		//if tx.Protected() && !w.chainConfig.IsEIP155(env.header.Number) {
+		//	log.Trace("Ignoring reply protected transaction", "hash", tx.Hash(), "eip155", w.chainConfig.EIP155Block)
+		//
+		//	txs.Pop()
+		//	continue
+		//}
 
-			txs.Pop()
-			continue
-		}
+		tx.Protected()
+
 		// Start executing the transaction
 		env.state.Prepare(tx.Hash(), env.tcount)
 
@@ -1003,13 +1006,13 @@ func (w *worker) prepareWork(genParams *generateParams) (*environment, error) {
 		header.MixDigest = genParams.random
 	}
 	// Set baseFee and GasLimit if we are on an EIP-1559 chain
-	if w.chainConfig.IsLondon(header.Number) {
-		header.BaseFee = misc.CalcBaseFee(w.chainConfig, parent.Header())
-		if !w.chainConfig.IsLondon(parent.Number()) {
-			parentGasLimit := parent.GasLimit() * params.ElasticityMultiplier
-			header.GasLimit = core.CalcGasLimit(parentGasLimit, w.config.GasCeil)
-		}
-	}
+	//if w.chainConfig.IsLondon(header.Number) {
+	header.BaseFee = misc.CalcBaseFee(w.chainConfig, parent.Header())
+	//if !w.chainConfig.IsLondon(parent.Number()) {
+	//	parentGasLimit := parent.GasLimit() * params.ElasticityMultiplier
+	//	header.GasLimit = core.CalcGasLimit(parentGasLimit, w.config.GasCeil)
+	//}
+	//}
 	// Run the consensus preparation with the default or customized consensus engine.
 	if err := w.engine.Prepare(w.chain, header); err != nil {
 		log.Error("Failed to prepare header for sealing", "err", err)

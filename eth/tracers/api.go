@@ -289,7 +289,8 @@ func (api *API) traceChain(ctx context.Context, start, end *types.Block, config 
 						break
 					}
 					// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-					task.statedb.Finalise(api.backend.ChainConfig().IsEIP158(task.block.Number()))
+					//task.statedb.Finalise(api.backend.ChainConfig().IsEIP158(task.block.Number()))
+					task.statedb.Finalise(true)
 					task.results[i] = &txTraceResult{Result: res}
 				}
 				// Stream the result back to the user or abort on teardown
@@ -524,7 +525,7 @@ func (api *API) IntermediateRoots(ctx context.Context, hash common.Hash, config 
 		signer             = types.MakeSigner(api.backend.ChainConfig(), block.Number())
 		chainConfig        = api.backend.ChainConfig()
 		vmctx              = core.NewEVMBlockContext(block.Header(), api.chainContext(ctx), nil)
-		deleteEmptyObjects = chainConfig.IsEIP158(block.Number())
+		deleteEmptyObjects = true
 	)
 	for i, tx := range block.Transactions() {
 		var (
@@ -633,7 +634,7 @@ func (api *API) traceBlock(ctx context.Context, block *types.Block, config *Trac
 		}
 		// Finalize the state so any modifications are written to the trie
 		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		statedb.Finalise(vmenv.ChainConfig().IsEIP158(block.Number()))
+		statedb.Finalise(true)
 	}
 	close(jobs)
 	pend.Wait()
@@ -701,10 +702,10 @@ func (api *API) standardTraceBlockToFile(ctx context.Context, block *types.Block
 		chainConfigCopy := new(params.ChainConfig)
 		*chainConfigCopy = *chainConfig
 		chainConfig = chainConfigCopy
-		if berlin := config.Config.Overrides.BerlinBlock; berlin != nil {
-			chainConfig.BerlinBlock = berlin
-			canon = false
-		}
+		//if berlin := config.Config.Overrides.BerlinBlock; berlin != nil {
+		//	chainConfig.BerlinBlock = berlin
+		//	canon = false
+		//}
 	}
 	for i, tx := range block.Transactions() {
 		// Prepare the transaction for un-traced execution
@@ -753,7 +754,7 @@ func (api *API) standardTraceBlockToFile(ctx context.Context, block *types.Block
 		}
 		// Finalize the state so any modifications are written to the trie
 		// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
-		statedb.Finalise(vmenv.ChainConfig().IsEIP158(block.Number()))
+		statedb.Finalise(true)
 
 		// If we've traced the transaction we were looking for, abort
 		if tx.Hash() == txHash {

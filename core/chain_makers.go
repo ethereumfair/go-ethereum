@@ -170,13 +170,13 @@ func (b *BlockGen) AddUncle(h *types.Header) {
 
 	// The gas limit and price should be derived from the parent
 	h.GasLimit = parent.GasLimit
-	if b.config.IsLondon(h.Number) {
-		h.BaseFee = misc.CalcBaseFee(b.config, parent)
-		if !b.config.IsLondon(parent.Number) {
-			parentGasLimit := parent.GasLimit * params.ElasticityMultiplier
-			h.GasLimit = CalcGasLimit(parentGasLimit, parentGasLimit)
-		}
-	}
+	//if b.config.IsLondon(h.Number) {
+	h.BaseFee = misc.CalcBaseFee(b.config, parent)
+	//if !b.config.IsLondon(parent.Number) {
+	//	parentGasLimit := parent.GasLimit * params.ElasticityMultiplier
+	//	h.GasLimit = CalcGasLimit(parentGasLimit, parentGasLimit)
+	//}
+	//}
 	b.uncles = append(b.uncles, h)
 }
 
@@ -219,7 +219,7 @@ func (b *BlockGen) OffsetTime(seconds int64) {
 // a similar non-validating proof of work implementation.
 func GenerateChain(config *params.ChainConfig, parent *types.Block, engine consensus.Engine, db ethdb.Database, n int, gen func(int, *BlockGen)) ([]*types.Block, []types.Receipts) {
 	if config == nil {
-		config = params.TestChainConfig
+		config = params.TestnetChainConfig
 	}
 	blocks, receipts := make(types.Blocks, n), make([]types.Receipts, n)
 	chainreader := &fakeChainReader{config: config}
@@ -240,17 +240,17 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		//	}
 		//}
 		// Mutate the state and block according to any hard-fork specs
-		if daoBlock := config.DAOForkBlock; daoBlock != nil {
-			limit := new(big.Int).Add(daoBlock, params.DAOForkExtraRange)
-			if b.header.Number.Cmp(daoBlock) >= 0 && b.header.Number.Cmp(limit) < 0 {
-				if config.DAOForkSupport {
-					b.header.Extra = common.CopyBytes(params.DAOForkBlockExtra)
-				}
-			}
-		}
-		if config.DAOForkSupport && config.DAOForkBlock != nil && config.DAOForkBlock.Cmp(b.header.Number) == 0 {
-			misc.ApplyDAOHardFork(statedb)
-		}
+		//if daoBlock := config.DAOForkBlock; daoBlock != nil {
+		//	limit := new(big.Int).Add(daoBlock, params.DAOForkExtraRange)
+		//	if b.header.Number.Cmp(daoBlock) >= 0 && b.header.Number.Cmp(limit) < 0 {
+		//		if config.DAOForkSupport {
+		//			b.header.Extra = common.CopyBytes(params.DAOForkBlockExtra)
+		//		}
+		//	}
+		//}
+		//if config.DAOForkSupport && config.DAOForkBlock != nil && config.DAOForkBlock.Cmp(b.header.Number) == 0 {
+		//	misc.ApplyDAOHardFork(statedb)
+		//}
 		// Execute any user modifications to the block
 		if gen != nil {
 			gen(i, b)
@@ -260,7 +260,8 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 			block, _ := b.engine.FinalizeAndAssemble(chainreader, b.header, statedb, b.txs, b.uncles, b.receipts)
 
 			// Write state changes to db
-			root, err := statedb.Commit(config.IsEIP158(b.header.Number))
+			//root, err := statedb.Commit(config.IsEIP158(b.header.Number))
+			root, err := statedb.Commit(true)
 			if err != nil {
 				panic(fmt.Sprintf("state write error: %v", err))
 			}
@@ -292,7 +293,8 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 		time = parent.Time() + 10 // block time is fixed at 10 seconds
 	}
 	header := &types.Header{
-		Root:       state.IntermediateRoot(chain.Config().IsEIP158(parent.Number())),
+		//Root:       state.IntermediateRoot(chain.Config().IsEIP158(parent.Number())),
+		Root:       state.IntermediateRoot(true),
 		ParentHash: parent.Hash(),
 		Coinbase:   parent.Coinbase(),
 		Difficulty: engine.CalcDifficulty(chain, time, &types.Header{
@@ -305,13 +307,13 @@ func makeHeader(chain consensus.ChainReader, parent *types.Block, state *state.S
 		Number:   new(big.Int).Add(parent.Number(), common.Big1),
 		Time:     time,
 	}
-	if chain.Config().IsLondon(header.Number) {
-		header.BaseFee = misc.CalcBaseFee(chain.Config(), parent.Header())
-		if !chain.Config().IsLondon(parent.Number()) {
-			parentGasLimit := parent.GasLimit() * params.ElasticityMultiplier
-			header.GasLimit = CalcGasLimit(parentGasLimit, parentGasLimit)
-		}
-	}
+	//if chain.Config().IsLondon(header.Number) {
+	header.BaseFee = misc.CalcBaseFee(chain.Config(), parent.Header())
+	//if !chain.Config().IsLondon(parent.Number()) {
+	//	parentGasLimit := parent.GasLimit() * params.ElasticityMultiplier
+	//	header.GasLimit = CalcGasLimit(parentGasLimit, parentGasLimit)
+	//}
+	//}
 	return header
 }
 
@@ -327,7 +329,7 @@ func makeHeaderChain(parent *types.Header, n int, engine consensus.Engine, db et
 
 // makeBlockChain creates a deterministic chain of blocks rooted at parent.
 func makeBlockChain(parent *types.Block, n int, engine consensus.Engine, db ethdb.Database, seed int) []*types.Block {
-	blocks, _ := GenerateChain(params.TestChainConfig, parent, engine, db, n, func(i int, b *BlockGen) {
+	blocks, _ := GenerateChain(params.TestnetChainConfig, parent, engine, db, n, func(i int, b *BlockGen) {
 		b.SetCoinbase(common.Address{0: byte(seed), 19: byte(i)})
 	})
 	return blocks
