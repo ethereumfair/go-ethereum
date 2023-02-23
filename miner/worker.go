@@ -787,23 +787,23 @@ func (w *worker) makeEnv(parent *types.Block, header *types.Header, coinbase com
 // commitUncle adds the given block to uncle block set, returns error if failed to add.
 func (w *worker) commitUncle(env *environment, uncle *types.Header) error {
 	//if w.isTTDReached(env.header) {
-	//	return errors.New("ignore uncle for beacon block")
+	return errors.New("ignore uncle for dogew block")
 	//}
-	hash := uncle.Hash()
-	if _, exist := env.uncles[hash]; exist {
-		return errors.New("uncle not unique")
-	}
-	if env.header.ParentHash == uncle.ParentHash {
-		return errors.New("uncle is sibling")
-	}
-	if !env.ancestors.Contains(uncle.ParentHash) {
-		return errors.New("uncle's parent unknown")
-	}
-	if env.family.Contains(hash) {
-		return errors.New("uncle already included")
-	}
-	env.uncles[hash] = uncle
-	return nil
+	//hash := uncle.Hash()
+	//if _, exist := env.uncles[hash]; exist {
+	//	return errors.New("uncle not unique")
+	//}
+	//if env.header.ParentHash == uncle.ParentHash {
+	//	return errors.New("uncle is sibling")
+	//}
+	//if !env.ancestors.Contains(uncle.ParentHash) {
+	//	return errors.New("uncle's parent unknown")
+	//}
+	//if env.family.Contains(hash) {
+	//	return errors.New("uncle already included")
+	//}
+	//env.uncles[hash] = uncle
+	//return nil
 }
 
 // updateSnapshot updates pending snapshot block, receipts and state.
