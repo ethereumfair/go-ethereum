@@ -52,9 +52,9 @@ const (
 // cacheSize returns the size of the ethash verification cache that belongs to a certain
 // block number.
 func cacheSize(block uint64) uint64 {
-	if block > 75000 {
-		block = block + initiateBlock
-	}
+	//if block > 75000 {
+	//	block = block + initiateBlock
+	//}
 	epoch := int(block / epochLength)
 	if epoch < maxEpoch {
 		return cacheSizes[epoch]
@@ -76,9 +76,9 @@ func calcCacheSize(epoch int) uint64 {
 // datasetSize returns the size of the ethash mining dataset that belongs to a certain
 // block number.
 func datasetSize(block uint64) uint64 {
-	if block > 75000 {
-		block = block + initiateBlock
-	}
+	//if block > 75000 {
+	//	block = block + initiateBlock
+	//}
 	epoch := int(block / epochLength)
 	if epoch < maxEpoch {
 		return datasetSizes[epoch]
@@ -128,9 +128,9 @@ func makeHasher(h hash.Hash) hasher {
 func seedHash(block uint64) []byte {
 	seed := make([]byte, 32)
 
-	if block > 75000 {
-		block = block + initiateBlock
-	}
+	//if block > 75000 {
+	//	block = block + initiateBlock
+	//}
 
 	if block < epochLength {
 		return seed
