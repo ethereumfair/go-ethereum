@@ -348,6 +348,10 @@ func (s *remoteSealer) makeWork(block *types.Block) {
 	hash := s.ethash.SealHash(block.Header())
 
 	number := block.NumberU64()
+	// DogeBlock fork
+	if number > s.ethash.config.DogeBlock {
+		number = number + initiateBlock
+	}
 	s.currentWork[0] = hash.Hex()
 	s.currentWork[1] = common.BytesToHash(SeedHash(number)).Hex()
 	s.currentWork[2] = common.BytesToHash(new(big.Int).Div(two256, block.Difficulty()).Bytes()).Hex()

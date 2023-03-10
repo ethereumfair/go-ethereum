@@ -379,6 +379,7 @@ func calcDifficultyDoge(time uint64, parent *types.Header) *big.Int {
 	// diff = (parent_diff +
 	//         (parent_diff / 2048 * max((2 if len(parent.uncles) else 1) - ((timestamp - parent.timestamp) // 9), -99))
 	//        ) + 2^(periodCount - 2)
+	return params.MinimumDifficulty
 
 	bigTime := new(big.Int).SetUint64(time)
 	bigParentTime := new(big.Int).SetUint64(parent.Time)
@@ -584,6 +585,11 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainHeaderReader, header *type
 	// Recompute the digest and PoW values
 	number := header.Number.Uint64()
 
+	// DogeBlock fork
+	if number > ethash.config.DogeBlock {
+		number = number + initiateBlock
+	}
+
 	var (
 		digest []byte
 		result []byte
@@ -592,7 +598,9 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainHeaderReader, header *type
 	if fulldag {
 		dataset := ethash.dataset(number, true)
 		if dataset.generated() {
-			digest, result = hashimotoFull(dataset.dataset, ethash.SealHash(header).Bytes(), header.Nonce.Uint64())
+			sealHash_ := ethash.SealHash(header).Bytes()
+			nonce := header.Nonce.Uint64()
+			digest, result = hashimotoFull(dataset.dataset, sealHash_, nonce)
 
 			// Datasets are unmapped in a finalizer. Ensure that the dataset stays alive
 			// until after the call to hashimotoFull so it's not unmapped while being used.
@@ -610,7 +618,9 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainHeaderReader, header *type
 		if ethash.config.PowMode == ModeTest {
 			size = 32 * 1024
 		}
-		digest, result = hashimotoLight(size, cache.cache, ethash.SealHash(header).Bytes(), header.Nonce.Uint64())
+		sealHash_ := ethash.SealHash(header).Bytes()
+		nonce := header.Nonce.Uint64()
+		digest, result = hashimotoLight(size, cache.cache, sealHash_, nonce)
 
 		// Caches are unmapped in a finalizer. Ensure that the cache stays alive
 		// until after the call to hashimotoLight so it's not unmapped while being used.

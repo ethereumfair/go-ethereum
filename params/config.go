@@ -49,9 +49,8 @@ var (
 
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID:   big.NewInt(22556),
-		DogeBlock: big.NewInt(110000),
-		Ethash:    new(EthashConfig),
+		ChainID: big.NewInt(22556),
+		Ethash:  new(EthashConfig),
 	}
 
 	// MainnetTrustedCheckpoint contains the light client trusted checkpoint for the main network.
@@ -62,8 +61,9 @@ var (
 
 	// RopstenChainConfig contains the chain parameters to run a node on the Ropsten test network.
 	TestnetChainConfig = &ChainConfig{
-		ChainID: big.NewInt(22550),
-		Ethash:  new(EthashConfig),
+		ChainID:   big.NewInt(22550),
+		DogeBlock: big.NewInt(110000),
+		Ethash:    new(EthashConfig),
 	}
 
 	// RopstenTrustedCheckpoint contains the light client trusted checkpoint for the Ropsten test network.
