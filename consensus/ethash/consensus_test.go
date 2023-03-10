@@ -73,7 +73,7 @@ func TestCalcDifficulty(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	config := &params.ChainConfig{HomesteadBlock: big.NewInt(1150000)}
+	config := &params.ChainConfig{DogeBlock: big.NewInt(1150000)}
 
 	for name, test := range tests {
 		number := new(big.Int).Sub(test.CurrentBlocknumber, big.NewInt(1))
