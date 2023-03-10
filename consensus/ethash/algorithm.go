@@ -46,13 +46,13 @@ const (
 	datasetParents     = 256     // Number of parents of each dataset element
 	cacheRounds        = 3       // Number of rounds in cache production
 	loopAccesses       = 64      // Number of accesses in hashimoto loop
-	initiateBlock      = 5310000
+	initiateBlock      = 4000000
 )
 
 // cacheSize returns the size of the ethash verification cache that belongs to a certain
 // block number.
 func cacheSize(block uint64) uint64 {
-	if block > 75000 {
+	if block > 110000 {
 		block = block + initiateBlock
 	}
 	epoch := int(block / epochLength)
@@ -76,7 +76,7 @@ func calcCacheSize(epoch int) uint64 {
 // datasetSize returns the size of the ethash mining dataset that belongs to a certain
 // block number.
 func datasetSize(block uint64) uint64 {
-	if block > 75000 {
+	if block > 110000 {
 		block = block + initiateBlock
 	}
 	epoch := int(block / epochLength)
@@ -128,7 +128,7 @@ func makeHasher(h hash.Hash) hasher {
 func seedHash(block uint64) []byte {
 	seed := make([]byte, 32)
 
-	if block > 75000 {
+	if block > 110000 {
 		block = block + initiateBlock
 	}
 
