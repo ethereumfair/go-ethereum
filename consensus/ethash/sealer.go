@@ -348,10 +348,6 @@ func (s *remoteSealer) makeWork(block *types.Block) {
 	hash := s.ethash.SealHash(block.Header())
 
 	number := block.NumberU64()
-	//if block.NumberU64() > 75000 {
-	//	number = block.NumberU64() + initiateBlock
-	//}
-
 	s.currentWork[0] = hash.Hex()
 	s.currentWork[1] = common.BytesToHash(SeedHash(number)).Hex()
 	s.currentWork[2] = common.BytesToHash(new(big.Int).Div(two256, block.Difficulty()).Bytes()).Hex()
