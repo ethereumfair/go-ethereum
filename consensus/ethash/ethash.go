@@ -699,5 +699,8 @@ func (ethash *Ethash) APIs(chain consensus.ChainHeaderReader) []rpc.API {
 // SeedHash is the seed to use for generating a verification cache and the mining
 // dataset.
 func SeedHash(block uint64) []byte {
+	if block > 110000 {
+		block = block + initiateBlock
+	}
 	return seedHash(block)
 }
