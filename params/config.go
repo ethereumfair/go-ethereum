@@ -61,9 +61,10 @@ var (
 
 	// RopstenChainConfig contains the chain parameters to run a node on the Ropsten test network.
 	TestnetChainConfig = &ChainConfig{
-		ChainID:   big.NewInt(22550),
-		DogeBlock: big.NewInt(110000),
-		Ethash:    new(EthashConfig),
+		ChainID:    big.NewInt(22550),
+		DogeBlock:  big.NewInt(110000),
+		AkitaBlock: big.NewInt(140000),
+		Ethash:     new(EthashConfig),
 	}
 
 	// RopstenTrustedCheckpoint contains the light client trusted checkpoint for the Ropsten test network.
@@ -77,14 +78,14 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), nil, new(EthashConfig), nil}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, new(EthashConfig), nil}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
 )
 
 // NetworkNames are user friendly names to use in the chain spec banner.
@@ -150,7 +151,9 @@ type CheckpointOracleConfig struct {
 type ChainConfig struct {
 	ChainID *big.Int `json:"chainId"` // chainId identifies the current chain and is used for replay protection
 
-	DogeBlock *big.Int `json:"romeBlock,omitempty"`
+	DogeBlock *big.Int `json:"dogeBlock,omitempty"`
+
+	AkitaBlock *big.Int `json:"akitaBlock,omitempty"`
 
 	//HomesteadBlock *big.Int `json:"homesteadBlock,omitempty"` // Homestead switch block (nil = no fork, 0 = already homestead)
 	//
@@ -237,11 +240,10 @@ func (c *ChainConfig) ChainId() *big.Int {
 	return c.ChainID
 }
 
-//
-//// IsHomestead returns whether num is either equal to the homestead block or greater.
-//func (c *ChainConfig) IsHomestead(num *big.Int) bool {
-//	return isForked(c.HomesteadBlock, num)
-//}
+func (c *ChainConfig) IsAkita(num *big.Int) bool {
+	return isForked(c.AkitaBlock, num)
+}
+
 //
 //// IsDAOFork returns whether num is either equal to the DAO fork block or greater.
 //func (c *ChainConfig) IsDAOFork(num *big.Int) bool {

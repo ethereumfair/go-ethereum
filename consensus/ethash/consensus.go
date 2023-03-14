@@ -43,6 +43,7 @@ var (
 	//ByzantiumBlockReward          = big.NewInt(3e+18) // Block reward in wei for successfully mining a block upward from Byzantium
 	//ConstantinopleBlockReward     = big.NewInt(2e+18) // Block reward in wei for successfully mining a block upward from Constantinople
 	DogeReward                    = new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil), big.NewInt(2500))
+	AkitaReward                   = new(big.Int).Mul(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil), big.NewInt(500))
 	maxUncles                     = 0         // Maximum number of uncles allowed in a single block
 	allowedFutureBlockTimeSeconds = int64(15) // Max seconds from current time allowed for blocks, before they're considered future blocks
 
@@ -705,9 +706,11 @@ var (
 func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
 	// Select the correct block reward based on chain progression
 	blockReward := DogeReward
-	//if config.IsByzantium(header.Number) {
-	//	blockReward = ByzantiumBlockReward
-	//}
+
+	if config.IsAkita(header.Number) {
+		blockReward = AkitaReward
+	}
+
 	//if config.IsConstantinople(header.Number) {
 	//	blockReward = ConstantinopleBlockReward
 	//}
