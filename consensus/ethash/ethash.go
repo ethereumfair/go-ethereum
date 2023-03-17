@@ -34,7 +34,7 @@ import (
 	"unsafe"
 
 	"github.com/edsrzf/mmap-go"
-	"github.com/ethereum/go-ethereum/event"
+	"github.com/ethereumfair/go-ethereum/event"
 	"github.com/ethereumfair/go-ethereum/consensus"
 	"github.com/ethereumfair/go-ethereum/log"
 	"github.com/ethereumfair/go-ethereum/metrics"

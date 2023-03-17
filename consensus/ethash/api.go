@@ -20,7 +20,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/ethereum/go-ethereum/rpc"
+	"github.com/ethereumfair/go-ethereum/rpc"
 	"github.com/ethereumfair/go-ethereum/common"
 	"github.com/ethereumfair/go-ethereum/common/hexutil"
 	"github.com/ethereumfair/go-ethereum/core/types"
