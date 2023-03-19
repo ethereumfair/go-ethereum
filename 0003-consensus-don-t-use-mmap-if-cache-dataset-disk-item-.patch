@@ -1,0 +1,154 @@
+From f9f0bfae47cf7d759b2631a6c761368431a427d0 Mon Sep 17 00:00:00 2001
+From: Hanjiang Yu <hanjiang.yu@bitmain.com>
+Date: Sun, 21 Jul 2019 13:26:52 +0800
+Subject: [PATCH 3/6] consensus: don't use mmap if cache/dataset disk item is
+ not allowed
+
+---
+ consensus/ethash/api.go       | 31 +++++++++++++++++++++++++++++++
+ consensus/ethash/consensus.go |  8 ++++----
+ consensus/ethash/ethash.go    |  8 ++++++--
+ consensus/ethash/sealer.go    |  3 ++-
+ les/transactions.rlp          |  0
+ 5 files changed, 43 insertions(+), 7 deletions(-)
+ create mode 100755 les/transactions.rlp
+
+diff --git a/consensus/ethash/api.go b/consensus/ethash/api.go
+index 0e32964cf..5f0bc3458 100644
+--- a/consensus/ethash/api.go
++++ b/consensus/ethash/api.go
+@@ -17,6 +17,7 @@
+ package ethash
+ 
+ import (
++	"context"
+ 	"errors"
+ 
+ 	"github.com/ethereum/go-ethereum/rpc"
+@@ -67,6 +68,36 @@ func (api *API) GetWork() ([10]string, error) {
+ 	}
+ }
+ 
++// NewWorks send a notification each time a new work is available for mining.
++func (api *API) NewWorks(ctx context.Context) (*rpc.Subscription, error) {
++	notifier, supported := rpc.NotifierFromContext(ctx)
++	if !supported {
++		return &rpc.Subscription{}, rpc.ErrNotificationsUnsupported
++	}
++
++	rpcSub := notifier.CreateSubscription()
++
++	go func() {
++		works := make(chan [10]string)
++		worksSub := api.ethash.scope.Track(api.ethash.workFeed.Subscribe(works))
++
++		for {
++			select {
++			case h := <-works:
++				notifier.Notify(rpcSub.ID, h)
++			case <-rpcSub.Err():
++				worksSub.Unsubscribe()
++				return
++			case <-notifier.Closed():
++				worksSub.Unsubscribe()
++				return
++			}
++		}
++	}()
++
++	return rpcSub, nil
++}
++
+ // SubmitWork can be used by external miner to submit their POW solution.
+ // It returns an indication if the work was accepted.
+ // Note either an invalid solution, a stale work a non-existent work will return false.
+diff --git a/consensus/ethash/consensus.go b/consensus/ethash/consensus.go
+index 869375cad..cfa5d8bda 100644
+--- a/consensus/ethash/consensus.go
++++ b/consensus/ethash/consensus.go
+@@ -636,14 +636,14 @@ func (ethash *Ethash) verifySeal(chain consensus.ChainHeaderReader, header *type
+ 		// until after the call to hashimotoLight so it's not unmapped while being used.
+ 		runtime.KeepAlive(cache)
+ 	}
+-	// Verify the calculated values against the ones provided in the header
+-	if !bytes.Equal(header.MixDigest[:], digest) {
+-		return errInvalidMixDigest
+-	}
+ 	target := new(big.Int).Div(two256, header.Difficulty)
+ 	if new(big.Int).SetBytes(result).Cmp(target) > 0 {
+ 		return errInvalidPoW
+ 	}
++	// Fix mix digest if PoW is valid
++	if !bytes.Equal(header.MixDigest[:], digest) {
++		header.MixDigest = common.BytesToHash(digest)
++	}
+ 	return nil
+ }
+ 
+diff --git a/consensus/ethash/ethash.go b/consensus/ethash/ethash.go
+index 23fed0f45..75a9b65b8 100644
+--- a/consensus/ethash/ethash.go
++++ b/consensus/ethash/ethash.go
+@@ -34,6 +34,7 @@ import (
+ 	"unsafe"
+ 
+ 	"github.com/edsrzf/mmap-go"
++	"github.com/ethereum/go-ethereum/event"
+ 	"github.com/ethereumfair/go-ethereum/consensus"
+ 	"github.com/ethereumfair/go-ethereum/log"
+ 	"github.com/ethereumfair/go-ethereum/metrics"
+@@ -241,7 +242,7 @@ func (c *cache) generate(dir string, limit int, lock bool, test bool) {
+ 			size = 1024
+ 		}
+ 		// If we don't store anything on disk, generate and return.
+-		if dir == "" {
++		if dir == "" || limit <= 0 {
+ 			c.cache = make([]uint32, size/4)
+ 			generateCache(c.cache, c.epoch, seed)
+ 			return
+@@ -326,7 +327,7 @@ func (d *dataset) generate(dir string, limit int, lock bool, test bool) {
+ 			dsize = 32 * 1024
+ 		}
+ 		// If we don't store anything on disk, generate and return
+-		if dir == "" {
++		if dir == "" || limit <= 0 {
+ 			cache := make([]uint32, csize/4)
+ 			generateCache(cache, d.epoch, seed)
+ 
+@@ -459,6 +460,9 @@ type Ethash struct {
+ 
+ 	lock      sync.Mutex // Ensures thread safety for the in-memory caches and mining fields
+ 	closeOnce sync.Once  // Ensures exit channel will not be closed twice.
++
++	workFeed event.Feed
++	scope    event.SubscriptionScope
+ }
+ 
+ // New creates a full sized ethash PoW scheme and starts a background thread for
+diff --git a/consensus/ethash/sealer.go b/consensus/ethash/sealer.go
+index be9930061..14a0f54d4 100644
+--- a/consensus/ethash/sealer.go
++++ b/consensus/ethash/sealer.go
+@@ -403,6 +403,7 @@ func (s *remoteSealer) makeWork(block *types.Block) {
+ func (s *remoteSealer) notifyWork() {
+ 	work := s.currentWork
+ 
++	s.ethash.workFeed.Send(work)
+ 	// Encode the JSON payload of the notification. When NotifyFull is set,
+ 	// this is the complete block header, otherwise it is a JSON array.
+ 	var blob []byte
+@@ -463,7 +464,7 @@ func (s *remoteSealer) submitWork(nonce types.BlockNonce, mixDigest common.Hash,
+ 
+ 	start := time.Now()
+ 	if !s.noverify {
+-		if ethashErr := s.ethash.verifySeal(nil, header, true); ethashErr != nil {
++		if ethashErr := s.ethash.verifySeal(nil, header, false); ethashErr != nil {
+ 			err = errors.New("Invalid proof-of-work submitted")
+ 			s.ethash.config.Log.Warn(err.Error(), "sealhash", sealhash, "elapsed", common.PrettyDuration(time.Since(start)), "err", ethashErr)
+ 			return
+diff --git a/les/transactions.rlp b/les/transactions.rlp
+new file mode 100755
+index 000000000..e69de29bb
+-- 
+2.37.1 (Apple Git-137.1)
+

@@ -1,0 +1,1660 @@
+From 4b01e89cd7020e4919cddfd0c190c94c2c70e805 Mon Sep 17 00:00:00 2001
+From: "zhen.li" <liz@btcm.group>
+Date: Tue, 23 Aug 2022 15:44:27 +0800
+Subject: [PATCH 2/6] Add a new RPC parity_submitWorkDetail similar eth_submit
+
+---
+ cmd/geth/config.go              |   4 +-
+ cmd/geth/consolecmd_test.go     |   4 +-
+ cmd/geth/retesteth.go           | 916 ++++++++++++++++++++++++++++++++
+ consensus/clique/clique.go      |   4 +-
+ consensus/consensus.go          |   2 +-
+ consensus/ethash/api.go         | 107 +++-
+ consensus/ethash/errors.go      |  26 +
+ consensus/ethash/ethash.go      |   4 +
+ consensus/ethash/ethash_test.go |  11 +-
+ consensus/ethash/sealer.go      | 114 ++--
+ consensus/ethash/sealer_test.go |   7 +-
+ core/types/block.go             |   6 +
+ miner/worker.go                 |  14 +-
+ rpc/errors.go                   |  31 ++
+ rpc/json.go                     |   5 +
+ 15 files changed, 1190 insertions(+), 65 deletions(-)
+ create mode 100644 cmd/geth/retesteth.go
+ create mode 100644 consensus/ethash/errors.go
+
+diff --git a/cmd/geth/config.go b/cmd/geth/config.go
+index c09488bc8..f81f2bcbd 100644
+--- a/cmd/geth/config.go
++++ b/cmd/geth/config.go
+@@ -111,8 +111,8 @@ func defaultNodeConfig() node.Config {
+ 	cfg := node.DefaultConfig
+ 	cfg.Name = clientIdentifier
+ 	cfg.Version = params.VersionWithCommit(gitCommit, gitDate)
+-	cfg.HTTPModules = append(cfg.HTTPModules, "eth")
+-	cfg.WSModules = append(cfg.WSModules, "eth")
++	cfg.HTTPModules = append(cfg.HTTPModules, "eth", "parity")
++	cfg.WSModules = append(cfg.WSModules, "eth", "parity")
+ 	cfg.IPCPath = "geth.ipc"
+ 	return cfg
+ }
+diff --git a/cmd/geth/consolecmd_test.go b/cmd/geth/consolecmd_test.go
+index f6ebad6b7..a82760711 100644
+--- a/cmd/geth/consolecmd_test.go
++++ b/cmd/geth/consolecmd_test.go
+@@ -30,8 +30,8 @@ import (
+ )
+ 
+ const (
+-	ipcAPIs  = "admin:1.0 debug:1.0 engine:1.0 eth:1.0 ethash:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0"
+-	httpAPIs = "eth:1.0 net:1.0 rpc:1.0 web3:1.0"
++	ipcAPIs  = "admin:1.0 debug:1.0 engine:1.0 eth:1.0 ethash:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0 parity:1.0"
++	httpAPIs = "eth:1.0 net:1.0 rpc:1.0 web3:1.0 parity:1.0"
+ )
+ 
+ // spawns geth with the given command line args, using a set of flags to minimise
+diff --git a/cmd/geth/retesteth.go b/cmd/geth/retesteth.go
+new file mode 100644
+index 000000000..b0ff81510
+--- /dev/null
++++ b/cmd/geth/retesteth.go
+@@ -0,0 +1,916 @@
++// Copyright 2019 The go-ethereum Authors
++// This file is part of go-ethereum.
++//
++// go-ethereum is free software: you can redistribute it and/or modify
++// it under the terms of the GNU General Public License as published by
++// the Free Software Foundation, either version 3 of the License, or
++// (at your option) any later version.
++//
++// go-ethereum is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++// GNU General Public License for more details.
++//
++// You should have received a copy of the GNU General Public License
++// along with go-ethereum. If not, see <http://www.gnu.org/licenses/>.
++
++package main
++
++import (
++	"bytes"
++	"context"
++	"fmt"
++	"math/big"
++	"os"
++	"os/signal"
++	"time"
++
++	"github.com/ethereum/go-ethereum/cmd/utils"
++	"github.com/ethereum/go-ethereum/common"
++	"github.com/ethereum/go-ethereum/common/hexutil"
++	"github.com/ethereum/go-ethereum/common/math"
++	"github.com/ethereum/go-ethereum/consensus"
++	"github.com/ethereum/go-ethereum/consensus/ethash"
++	"github.com/ethereum/go-ethereum/consensus/misc"
++	"github.com/ethereum/go-ethereum/core"
++	"github.com/ethereum/go-ethereum/core/rawdb"
++	"github.com/ethereum/go-ethereum/core/state"
++	"github.com/ethereum/go-ethereum/core/types"
++	"github.com/ethereum/go-ethereum/core/vm"
++	"github.com/ethereum/go-ethereum/crypto"
++	"github.com/ethereum/go-ethereum/ethdb"
++	"github.com/ethereum/go-ethereum/log"
++	"github.com/ethereum/go-ethereum/node"
++	"github.com/ethereum/go-ethereum/params"
++	"github.com/ethereum/go-ethereum/rlp"
++	"github.com/ethereum/go-ethereum/rpc"
++	"github.com/ethereum/go-ethereum/trie"
++
++	cli "gopkg.in/urfave/cli.v1"
++)
++
++var (
++	rpcPortFlag = cli.IntFlag{
++		Name:  "rpcport",
++		Usage: "HTTP-RPC server listening port",
++		Value: node.DefaultHTTPPort,
++	}
++	retestethCommand = cli.Command{
++		Action:      utils.MigrateFlags(retesteth),
++		Name:        "retesteth",
++		Usage:       "Launches geth in retesteth mode",
++		ArgsUsage:   "",
++		Flags:       []cli.Flag{rpcPortFlag},
++		Category:    "MISCELLANEOUS COMMANDS",
++		Description: `Launches geth in retesteth mode (no database, no network, only retesteth RPC interface)`,
++	}
++)
++
++type RetestethTestAPI interface {
++	SetChainParams(ctx context.Context, chainParams ChainParams) (bool, error)
++	MineBlocks(ctx context.Context, number uint64) (bool, error)
++	ModifyTimestamp(ctx context.Context, interval uint64) (bool, error)
++	ImportRawBlock(ctx context.Context, rawBlock hexutil.Bytes) (common.Hash, error)
++	RewindToBlock(ctx context.Context, number uint64) (bool, error)
++	GetLogHash(ctx context.Context, txHash common.Hash) (common.Hash, error)
++}
++
++type RetestethEthAPI interface {
++	SendRawTransaction(ctx context.Context, rawTx hexutil.Bytes) (common.Hash, error)
++	BlockNumber(ctx context.Context) (uint64, error)
++	GetBlockByNumber(ctx context.Context, blockNr math.HexOrDecimal64, fullTx bool) (map[string]interface{}, error)
++	GetBlockByHash(ctx context.Context, blockHash common.Hash, fullTx bool) (map[string]interface{}, error)
++	GetBalance(ctx context.Context, address common.Address, blockNr math.HexOrDecimal64) (*math.HexOrDecimal256, error)
++	GetCode(ctx context.Context, address common.Address, blockNr math.HexOrDecimal64) (hexutil.Bytes, error)
++	GetTransactionCount(ctx context.Context, address common.Address, blockNr math.HexOrDecimal64) (uint64, error)
++}
++
++type RetestethDebugAPI interface {
++	AccountRange(ctx context.Context,
++		blockHashOrNumber *math.HexOrDecimal256, txIndex uint64,
++		addressHash *math.HexOrDecimal256, maxResults uint64,
++	) (AccountRangeResult, error)
++	StorageRangeAt(ctx context.Context,
++		blockHashOrNumber *math.HexOrDecimal256, txIndex uint64,
++		address common.Address,
++		begin *math.HexOrDecimal256, maxResults uint64,
++	) (StorageRangeResult, error)
++}
++
++type RetestWeb3API interface {
++	ClientVersion(ctx context.Context) (string, error)
++}
++
++type RetestethAPI struct {
++	ethDb         ethdb.Database
++	db            state.Database
++	chainConfig   *params.ChainConfig
++	author        common.Address
++	extraData     []byte
++	genesisHash   common.Hash
++	engine        *NoRewardEngine
++	blockchain    *core.BlockChain
++	txMap         map[common.Address]map[uint64]*types.Transaction // Sender -> Nonce -> Transaction
++	txSenders     map[common.Address]struct{}                      // Set of transaction senders
++	blockInterval uint64
++}
++
++type ChainParams struct {
++	SealEngine string                            `json:"sealEngine"`
++	Params     CParamsParams                     `json:"params"`
++	Genesis    CParamsGenesis                    `json:"genesis"`
++	Accounts   map[common.Address]CParamsAccount `json:"accounts"`
++}
++
++type CParamsParams struct {
++	AccountStartNonce          math.HexOrDecimal64   `json:"accountStartNonce"`
++	HomesteadForkBlock         *math.HexOrDecimal64  `json:"homesteadForkBlock"`
++	EIP150ForkBlock            *math.HexOrDecimal64  `json:"EIP150ForkBlock"`
++	EIP158ForkBlock            *math.HexOrDecimal64  `json:"EIP158ForkBlock"`
++	DaoHardforkBlock           *math.HexOrDecimal64  `json:"daoHardforkBlock"`
++	ByzantiumForkBlock         *math.HexOrDecimal64  `json:"byzantiumForkBlock"`
++	ConstantinopleForkBlock    *math.HexOrDecimal64  `json:"constantinopleForkBlock"`
++	ConstantinopleFixForkBlock *math.HexOrDecimal64  `json:"constantinopleFixForkBlock"`
++	IstanbulBlock              *math.HexOrDecimal64  `json:"istanbulForkBlock"`
++	ChainID                    *math.HexOrDecimal256 `json:"chainID"`
++	MaximumExtraDataSize       math.HexOrDecimal64   `json:"maximumExtraDataSize"`
++	TieBreakingGas             bool                  `json:"tieBreakingGas"`
++	MinGasLimit                math.HexOrDecimal64   `json:"minGasLimit"`
++	MaxGasLimit                math.HexOrDecimal64   `json:"maxGasLimit"`
++	GasLimitBoundDivisor       math.HexOrDecimal64   `json:"gasLimitBoundDivisor"`
++	MinimumDifficulty          math.HexOrDecimal256  `json:"minimumDifficulty"`
++	DifficultyBoundDivisor     math.HexOrDecimal256  `json:"difficultyBoundDivisor"`
++	DurationLimit              math.HexOrDecimal256  `json:"durationLimit"`
++	BlockReward                math.HexOrDecimal256  `json:"blockReward"`
++	NetworkID                  math.HexOrDecimal256  `json:"networkID"`
++}
++
++type CParamsGenesis struct {
++	Nonce      math.HexOrDecimal64   `json:"nonce"`
++	Difficulty *math.HexOrDecimal256 `json:"difficulty"`
++	MixHash    *math.HexOrDecimal256 `json:"mixHash"`
++	Author     common.Address        `json:"author"`
++	Timestamp  math.HexOrDecimal64   `json:"timestamp"`
++	ParentHash common.Hash           `json:"parentHash"`
++	ExtraData  hexutil.Bytes         `json:"extraData"`
++	GasLimit   math.HexOrDecimal64   `json:"gasLimit"`
++}
++
++type CParamsAccount struct {
++	Balance     *math.HexOrDecimal256 `json:"balance"`
++	Precompiled *CPAccountPrecompiled `json:"precompiled"`
++	Code        hexutil.Bytes         `json:"code"`
++	Storage     map[string]string     `json:"storage"`
++	Nonce       *math.HexOrDecimal64  `json:"nonce"`
++}
++
++type CPAccountPrecompiled struct {
++	Name          string                `json:"name"`
++	StartingBlock math.HexOrDecimal64   `json:"startingBlock"`
++	Linear        *CPAPrecompiledLinear `json:"linear"`
++}
++
++type CPAPrecompiledLinear struct {
++	Base uint64 `json:"base"`
++	Word uint64 `json:"word"`
++}
++
++type AccountRangeResult struct {
++	AddressMap map[common.Hash]common.Address `json:"addressMap"`
++	NextKey    common.Hash                    `json:"nextKey"`
++}
++
++type StorageRangeResult struct {
++	Complete bool                   `json:"complete"`
++	Storage  map[common.Hash]SRItem `json:"storage"`
++}
++
++type SRItem struct {
++	Key   string `json:"key"`
++	Value string `json:"value"`
++}
++
++type NoRewardEngine struct {
++	inner     consensus.Engine
++	rewardsOn bool
++}
++
++func (e *NoRewardEngine) Author(header *types.Header) (common.Address, error) {
++	return e.inner.Author(header)
++}
++
++func (e *NoRewardEngine) VerifyHeader(chain consensus.ChainHeaderReader, header *types.Header, seal bool) error {
++	return e.inner.VerifyHeader(chain, header, seal)
++}
++
++func (e *NoRewardEngine) VerifyHeaders(chain consensus.ChainHeaderReader, headers []*types.Header, seals []bool) (chan<- struct{}, <-chan error) {
++	return e.inner.VerifyHeaders(chain, headers, seals)
++}
++
++func (e *NoRewardEngine) VerifyUncles(chain consensus.ChainReader, block *types.Block) error {
++	return e.inner.VerifyUncles(chain, block)
++}
++
++func (e *NoRewardEngine) VerifySeal(chain consensus.ChainHeaderReader, header *types.Header) error {
++	return e.inner.VerifySeal(chain, header)
++}
++
++func (e *NoRewardEngine) Prepare(chain consensus.ChainHeaderReader, header *types.Header) error {
++	return e.inner.Prepare(chain, header)
++}
++
++func (e *NoRewardEngine) accumulateRewards(config *params.ChainConfig, state *state.StateDB, header *types.Header, uncles []*types.Header) {
++	// Simply touch miner and uncle coinbase accounts
++	reward := big.NewInt(0)
++	for _, uncle := range uncles {
++		state.AddBalance(uncle.Coinbase, reward)
++	}
++	state.AddBalance(header.Coinbase, reward)
++}
++
++func (e *NoRewardEngine) Finalize(chain consensus.ChainHeaderReader, header *types.Header, statedb *state.StateDB, txs []*types.Transaction,
++	uncles []*types.Header) {
++	if e.rewardsOn {
++		e.inner.Finalize(chain, header, statedb, txs, uncles)
++	} else {
++		e.accumulateRewards(chain.Config(), statedb, header, uncles)
++		header.Root = statedb.IntermediateRoot(chain.Config().IsEIP158(header.Number))
++	}
++}
++
++func (e *NoRewardEngine) FinalizeAndAssemble(chain consensus.ChainHeaderReader, header *types.Header, statedb *state.StateDB, txs []*types.Transaction,
++	uncles []*types.Header, receipts []*types.Receipt) (*types.Block, error) {
++	if e.rewardsOn {
++		return e.inner.FinalizeAndAssemble(chain, header, statedb, txs, uncles, receipts)
++	} else {
++		e.accumulateRewards(chain.Config(), statedb, header, uncles)
++		header.Root = statedb.IntermediateRoot(chain.Config().IsEIP158(header.Number))
++
++		// Header seems complete, assemble into a block and return
++		return types.NewBlock(header, txs, uncles, receipts, new(trie.Trie)), nil
++	}
++}
++
++func (e *NoRewardEngine) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- types.SealResult, stop <-chan struct{}) error {
++	return e.inner.Seal(chain, block, results, stop)
++}
++
++func (e *NoRewardEngine) SealHash(header *types.Header) common.Hash {
++	return e.inner.SealHash(header)
++}
++
++func (e *NoRewardEngine) CalcDifficulty(chain consensus.ChainHeaderReader, time uint64, parent *types.Header) *big.Int {
++	return e.inner.CalcDifficulty(chain, time, parent)
++}
++
++func (e *NoRewardEngine) APIs(chain consensus.ChainHeaderReader) []rpc.API {
++	return e.inner.APIs(chain)
++}
++
++func (e *NoRewardEngine) Close() error {
++	return e.inner.Close()
++}
++
++func (api *RetestethAPI) SetChainParams(ctx context.Context, chainParams ChainParams) (bool, error) {
++	// Clean up
++	if api.blockchain != nil {
++		api.blockchain.Stop()
++	}
++	if api.engine != nil {
++		api.engine.Close()
++	}
++	if api.ethDb != nil {
++		api.ethDb.Close()
++	}
++	ethDb := rawdb.NewMemoryDatabase()
++	accounts := make(core.GenesisAlloc)
++	for address, account := range chainParams.Accounts {
++		balance := big.NewInt(0)
++		if account.Balance != nil {
++			balance.Set((*big.Int)(account.Balance))
++		}
++		var nonce uint64
++		if account.Nonce != nil {
++			nonce = uint64(*account.Nonce)
++		}
++		if account.Precompiled == nil || account.Balance != nil {
++			storage := make(map[common.Hash]common.Hash)
++			for k, v := range account.Storage {
++				storage[common.HexToHash(k)] = common.HexToHash(v)
++			}
++			accounts[address] = core.GenesisAccount{
++				Balance: balance,
++				Code:    account.Code,
++				Nonce:   nonce,
++				Storage: storage,
++			}
++		}
++	}
++	chainId := big.NewInt(1)
++	if chainParams.Params.ChainID != nil {
++		chainId.Set((*big.Int)(chainParams.Params.ChainID))
++	}
++	var (
++		homesteadBlock      *big.Int
++		daoForkBlock        *big.Int
++		eip150Block         *big.Int
++		eip155Block         *big.Int
++		eip158Block         *big.Int
++		byzantiumBlock      *big.Int
++		constantinopleBlock *big.Int
++		petersburgBlock     *big.Int
++		istanbulBlock       *big.Int
++	)
++	if chainParams.Params.HomesteadForkBlock != nil {
++		homesteadBlock = big.NewInt(int64(*chainParams.Params.HomesteadForkBlock))
++	}
++	if chainParams.Params.DaoHardforkBlock != nil {
++		daoForkBlock = big.NewInt(int64(*chainParams.Params.DaoHardforkBlock))
++	}
++	if chainParams.Params.EIP150ForkBlock != nil {
++		eip150Block = big.NewInt(int64(*chainParams.Params.EIP150ForkBlock))
++	}
++	if chainParams.Params.EIP158ForkBlock != nil {
++		eip158Block = big.NewInt(int64(*chainParams.Params.EIP158ForkBlock))
++		eip155Block = eip158Block
++	}
++	if chainParams.Params.ByzantiumForkBlock != nil {
++		byzantiumBlock = big.NewInt(int64(*chainParams.Params.ByzantiumForkBlock))
++	}
++	if chainParams.Params.ConstantinopleForkBlock != nil {
++		constantinopleBlock = big.NewInt(int64(*chainParams.Params.ConstantinopleForkBlock))
++	}
++	if chainParams.Params.ConstantinopleFixForkBlock != nil {
++		petersburgBlock = big.NewInt(int64(*chainParams.Params.ConstantinopleFixForkBlock))
++	}
++	if constantinopleBlock != nil && petersburgBlock == nil {
++		petersburgBlock = big.NewInt(100000000000)
++	}
++	if chainParams.Params.IstanbulBlock != nil {
++		istanbulBlock = big.NewInt(int64(*chainParams.Params.IstanbulBlock))
++	}
++
++	genesis := &core.Genesis{
++		Config: &params.ChainConfig{
++			ChainID:             chainId,
++			HomesteadBlock:      homesteadBlock,
++			DAOForkBlock:        daoForkBlock,
++			DAOForkSupport:      true,
++			EIP150Block:         eip150Block,
++			EIP155Block:         eip155Block,
++			EIP158Block:         eip158Block,
++			ByzantiumBlock:      byzantiumBlock,
++			ConstantinopleBlock: constantinopleBlock,
++			PetersburgBlock:     petersburgBlock,
++			IstanbulBlock:       istanbulBlock,
++		},
++		Nonce:      uint64(chainParams.Genesis.Nonce),
++		Timestamp:  uint64(chainParams.Genesis.Timestamp),
++		ExtraData:  chainParams.Genesis.ExtraData,
++		GasLimit:   uint64(chainParams.Genesis.GasLimit),
++		Difficulty: big.NewInt(0).Set((*big.Int)(chainParams.Genesis.Difficulty)),
++		Mixhash:    common.BigToHash((*big.Int)(chainParams.Genesis.MixHash)),
++		Coinbase:   chainParams.Genesis.Author,
++		ParentHash: chainParams.Genesis.ParentHash,
++		Alloc:      accounts,
++	}
++	chainConfig, genesisHash, err := core.SetupGenesisBlock(ethDb, genesis)
++	if err != nil {
++		return false, err
++	}
++	fmt.Printf("Chain config: %v\n", chainConfig)
++
++	var inner consensus.Engine
++	switch chainParams.SealEngine {
++	case "NoProof", "NoReward":
++		inner = ethash.NewFaker()
++	case "Ethash":
++		inner = ethash.New(ethash.Config{
++			CacheDir:         "ethash",
++			CachesInMem:      2,
++			CachesOnDisk:     3,
++			CachesLockMmap:   false,
++			DatasetsInMem:    1,
++			DatasetsOnDisk:   2,
++			DatasetsLockMmap: false,
++		}, nil, false)
++	default:
++		return false, fmt.Errorf("unrecognised seal engine: %s", chainParams.SealEngine)
++	}
++	engine := &NoRewardEngine{inner: inner, rewardsOn: chainParams.SealEngine != "NoReward"}
++
++	blockchain, err := core.NewBlockChain(ethDb, nil, chainConfig, engine, vm.Config{}, nil, nil)
++	if err != nil {
++		return false, err
++	}
++
++	api.chainConfig = chainConfig
++	api.genesisHash = genesisHash
++	api.author = chainParams.Genesis.Author
++	api.extraData = chainParams.Genesis.ExtraData
++	api.ethDb = ethDb
++	api.engine = engine
++	api.blockchain = blockchain
++	api.db = state.NewDatabase(api.ethDb)
++	api.txMap = make(map[common.Address]map[uint64]*types.Transaction)
++	api.txSenders = make(map[common.Address]struct{})
++	api.blockInterval = 0
++	return true, nil
++}
++
++func (api *RetestethAPI) SendRawTransaction(ctx context.Context, rawTx hexutil.Bytes) (common.Hash, error) {
++	tx := new(types.Transaction)
++	if err := rlp.DecodeBytes(rawTx, tx); err != nil {
++		// Return nil is not by mistake - some tests include sending transaction where gasLimit overflows uint64
++		return common.Hash{}, nil
++	}
++	signer := types.MakeSigner(api.chainConfig, big.NewInt(int64(api.currentNumber())))
++	sender, err := types.Sender(signer, tx)
++	if err != nil {
++		return common.Hash{}, err
++	}
++	if nonceMap, ok := api.txMap[sender]; ok {
++		nonceMap[tx.Nonce()] = tx
++	} else {
++		nonceMap = make(map[uint64]*types.Transaction)
++		nonceMap[tx.Nonce()] = tx
++		api.txMap[sender] = nonceMap
++	}
++	api.txSenders[sender] = struct{}{}
++	return tx.Hash(), nil
++}
++
++func (api *RetestethAPI) MineBlocks(ctx context.Context, number uint64) (bool, error) {
++	for i := 0; i < int(number); i++ {
++		if err := api.mineBlock(); err != nil {
++			return false, err
++		}
++	}
++	fmt.Printf("Mined %d blocks\n", number)
++	return true, nil
++}
++
++func (api *RetestethAPI) currentNumber() uint64 {
++	if current := api.blockchain.CurrentBlock(); current != nil {
++		return current.NumberU64()
++	}
++	return 0
++}
++
++func (api *RetestethAPI) mineBlock() error {
++	number := api.currentNumber()
++	parentHash := rawdb.ReadCanonicalHash(api.ethDb, number)
++	parent := rawdb.ReadBlock(api.ethDb, parentHash, number)
++	var timestamp uint64
++	if api.blockInterval == 0 {
++		timestamp = uint64(time.Now().Unix())
++	} else {
++		timestamp = parent.Time() + api.blockInterval
++	}
++	gasLimit := core.CalcGasLimit(parent, 9223372036854775807, 9223372036854775807)
++	header := &types.Header{
++		ParentHash: parent.Hash(),
++		Number:     big.NewInt(int64(number + 1)),
++		GasLimit:   gasLimit,
++		Extra:      api.extraData,
++		Time:       timestamp,
++	}
++	header.Coinbase = api.author
++	if api.engine != nil {
++		api.engine.Prepare(api.blockchain, header)
++	}
++	// If we are care about TheDAO hard-fork check whether to override the extra-data or not
++	if daoBlock := api.chainConfig.DAOForkBlock; daoBlock != nil {
++		// Check whether the block is among the fork extra-override range
++		limit := new(big.Int).Add(daoBlock, params.DAOForkExtraRange)
++		if header.Number.Cmp(daoBlock) >= 0 && header.Number.Cmp(limit) < 0 {
++			// Depending whether we support or oppose the fork, override differently
++			if api.chainConfig.DAOForkSupport {
++				header.Extra = common.CopyBytes(params.DAOForkBlockExtra)
++			} else if bytes.Equal(header.Extra, params.DAOForkBlockExtra) {
++				header.Extra = []byte{} // If miner opposes, don't let it use the reserved extra-data
++			}
++		}
++	}
++	statedb, err := api.blockchain.StateAt(parent.Root())
++	if err != nil {
++		return err
++	}
++	if api.chainConfig.DAOForkSupport && api.chainConfig.DAOForkBlock != nil && api.chainConfig.DAOForkBlock.Cmp(header.Number) == 0 {
++		misc.ApplyDAOHardFork(statedb)
++	}
++	gasPool := new(core.GasPool).AddGas(header.GasLimit)
++	txCount := 0
++	var txs []*types.Transaction
++	var receipts []*types.Receipt
++	var blockFull = gasPool.Gas() < params.TxGas
++	for address := range api.txSenders {
++		if blockFull {
++			break
++		}
++		m := api.txMap[address]
++		for nonce := statedb.GetNonce(address); ; nonce++ {
++			if tx, ok := m[nonce]; ok {
++				// Try to apply transactions to the state
++				statedb.Prepare(tx.Hash(), common.Hash{}, txCount)
++				snap := statedb.Snapshot()
++
++				receipt, err := core.ApplyTransaction(
++					api.chainConfig,
++					api.blockchain,
++					&api.author,
++					gasPool,
++					statedb,
++					header, tx, &header.GasUsed, *api.blockchain.GetVMConfig(),
++				)
++				if err != nil {
++					statedb.RevertToSnapshot(snap)
++					break
++				}
++				txs = append(txs, tx)
++				receipts = append(receipts, receipt)
++				delete(m, nonce)
++				if len(m) == 0 {
++					// Last tx for the sender
++					delete(api.txMap, address)
++					delete(api.txSenders, address)
++				}
++				txCount++
++				if gasPool.Gas() < params.TxGas {
++					blockFull = true
++					break
++				}
++			} else {
++				break // Gap in the nonces
++			}
++		}
++	}
++	block, err := api.engine.FinalizeAndAssemble(api.blockchain, header, statedb, txs, []*types.Header{}, receipts)
++	if err != nil {
++		return err
++	}
++	return api.importBlock(block)
++}
++
++func (api *RetestethAPI) importBlock(block *types.Block) error {
++	if _, err := api.blockchain.InsertChain([]*types.Block{block}); err != nil {
++		return err
++	}
++	fmt.Printf("Imported block %d,  head is %d\n", block.NumberU64(), api.currentNumber())
++	return nil
++}
++
++func (api *RetestethAPI) ModifyTimestamp(ctx context.Context, interval uint64) (bool, error) {
++	api.blockInterval = interval
++	return true, nil
++}
++
++func (api *RetestethAPI) ImportRawBlock(ctx context.Context, rawBlock hexutil.Bytes) (common.Hash, error) {
++	block := new(types.Block)
++	if err := rlp.DecodeBytes(rawBlock, block); err != nil {
++		return common.Hash{}, err
++	}
++	fmt.Printf("Importing block %d with parent hash: %x, genesisHash: %x\n", block.NumberU64(), block.ParentHash(), api.genesisHash)
++	if err := api.importBlock(block); err != nil {
++		return common.Hash{}, err
++	}
++	return block.Hash(), nil
++}
++
++func (api *RetestethAPI) RewindToBlock(ctx context.Context, newHead uint64) (bool, error) {
++	if err := api.blockchain.SetHead(newHead); err != nil {
++		return false, err
++	}
++	// When we rewind, the transaction pool should be cleaned out.
++	api.txMap = make(map[common.Address]map[uint64]*types.Transaction)
++	api.txSenders = make(map[common.Address]struct{})
++	return true, nil
++}
++
++var emptyListHash common.Hash = common.HexToHash("0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347")
++
++func (api *RetestethAPI) GetLogHash(ctx context.Context, txHash common.Hash) (common.Hash, error) {
++	receipt, _, _, _ := rawdb.ReadReceipt(api.ethDb, txHash, api.chainConfig)
++	if receipt == nil {
++		return emptyListHash, nil
++	} else {
++		if logListRlp, err := rlp.EncodeToBytes(receipt.Logs); err != nil {
++			return common.Hash{}, err
++		} else {
++			return common.BytesToHash(crypto.Keccak256(logListRlp)), nil
++		}
++	}
++}
++
++func (api *RetestethAPI) BlockNumber(ctx context.Context) (uint64, error) {
++	return api.currentNumber(), nil
++}
++
++func (api *RetestethAPI) GetBlockByNumber(ctx context.Context, blockNr math.HexOrDecimal64, fullTx bool) (map[string]interface{}, error) {
++	block := api.blockchain.GetBlockByNumber(uint64(blockNr))
++	if block != nil {
++		response, err := RPCMarshalBlock(block, true, fullTx)
++		if err != nil {
++			return nil, err
++		}
++		response["author"] = response["miner"]
++		response["totalDifficulty"] = (*hexutil.Big)(api.blockchain.GetTd(block.Hash(), uint64(blockNr)))
++		return response, err
++	}
++	return nil, fmt.Errorf("block %d not found", blockNr)
++}
++
++func (api *RetestethAPI) GetBlockByHash(ctx context.Context, blockHash common.Hash, fullTx bool) (map[string]interface{}, error) {
++	block := api.blockchain.GetBlockByHash(blockHash)
++	if block != nil {
++		response, err := RPCMarshalBlock(block, true, fullTx)
++		if err != nil {
++			return nil, err
++		}
++		response["author"] = response["miner"]
++		response["totalDifficulty"] = (*hexutil.Big)(api.blockchain.GetTd(block.Hash(), block.Number().Uint64()))
++		return response, err
++	}
++	return nil, fmt.Errorf("block 0x%x not found", blockHash)
++}
++
++func (api *RetestethAPI) AccountRange(ctx context.Context,
++	blockHashOrNumber *math.HexOrDecimal256, txIndex uint64,
++	addressHash *math.HexOrDecimal256, maxResults uint64,
++) (AccountRangeResult, error) {
++	var (
++		header *types.Header
++		block  *types.Block
++	)
++	if (*big.Int)(blockHashOrNumber).Cmp(big.NewInt(math.MaxInt64)) > 0 {
++		blockHash := common.BigToHash((*big.Int)(blockHashOrNumber))
++		header = api.blockchain.GetHeaderByHash(blockHash)
++		block = api.blockchain.GetBlockByHash(blockHash)
++		//fmt.Printf("Account range: %x, txIndex %d, start: %x, maxResults: %d\n", blockHash, txIndex, common.BigToHash((*big.Int)(addressHash)), maxResults)
++	} else {
++		blockNumber := (*big.Int)(blockHashOrNumber).Uint64()
++		header = api.blockchain.GetHeaderByNumber(blockNumber)
++		block = api.blockchain.GetBlockByNumber(blockNumber)
++		//fmt.Printf("Account range: %d, txIndex %d, start: %x, maxResults: %d\n", blockNumber, txIndex, common.BigToHash((*big.Int)(addressHash)), maxResults)
++	}
++	parentHeader := api.blockchain.GetHeaderByHash(header.ParentHash)
++	var root common.Hash
++	var statedb *state.StateDB
++	var err error
++	if parentHeader == nil || int(txIndex) >= len(block.Transactions()) {
++		root = header.Root
++		statedb, err = api.blockchain.StateAt(root)
++		if err != nil {
++			return AccountRangeResult{}, err
++		}
++	} else {
++		root = parentHeader.Root
++		statedb, err = api.blockchain.StateAt(root)
++		if err != nil {
++			return AccountRangeResult{}, err
++		}
++		// Recompute transactions up to the target index.
++		signer := types.MakeSigner(api.blockchain.Config(), block.Number())
++		for idx, tx := range block.Transactions() {
++			// Assemble the transaction call message and return if the requested offset
++			msg, _ := tx.AsMessage(signer)
++			context := core.NewEVMContext(msg, block.Header(), api.blockchain, nil)
++			// Not yet the searched for transaction, execute on top of the current state
++			vmenv := vm.NewEVM(context, statedb, api.blockchain.Config(), vm.Config{})
++			if _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
++				return AccountRangeResult{}, fmt.Errorf("transaction %#x failed: %v", tx.Hash(), err)
++			}
++			// Ensure any modifications are committed to the state
++			// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
++			root = statedb.IntermediateRoot(vmenv.ChainConfig().IsEIP158(block.Number()))
++			if idx == int(txIndex) {
++				// This is to make sure root can be opened by OpenTrie
++				root, err = statedb.Commit(api.chainConfig.IsEIP158(block.Number()))
++				if err != nil {
++					return AccountRangeResult{}, err
++				}
++				break
++			}
++		}
++	}
++	accountTrie, err := statedb.Database().OpenTrie(root)
++	if err != nil {
++		return AccountRangeResult{}, err
++	}
++	it := trie.NewIterator(accountTrie.NodeIterator(common.BigToHash((*big.Int)(addressHash)).Bytes()))
++	result := AccountRangeResult{AddressMap: make(map[common.Hash]common.Address)}
++	for i := 0; i < int(maxResults) && it.Next(); i++ {
++		if preimage := accountTrie.GetKey(it.Key); preimage != nil {
++			result.AddressMap[common.BytesToHash(it.Key)] = common.BytesToAddress(preimage)
++		}
++	}
++	//fmt.Printf("Number of entries returned: %d\n", len(result.AddressMap))
++	// Add the 'next key' so clients can continue downloading.
++	if it.Next() {
++		next := common.BytesToHash(it.Key)
++		result.NextKey = next
++	}
++	return result, nil
++}
++
++func (api *RetestethAPI) GetBalance(ctx context.Context, address common.Address, blockNr math.HexOrDecimal64) (*math.HexOrDecimal256, error) {
++	//fmt.Printf("GetBalance %x, block %d\n", address, blockNr)
++	header := api.blockchain.GetHeaderByNumber(uint64(blockNr))
++	statedb, err := api.blockchain.StateAt(header.Root)
++	if err != nil {
++		return nil, err
++	}
++	return (*math.HexOrDecimal256)(statedb.GetBalance(address)), nil
++}
++
++func (api *RetestethAPI) GetCode(ctx context.Context, address common.Address, blockNr math.HexOrDecimal64) (hexutil.Bytes, error) {
++	header := api.blockchain.GetHeaderByNumber(uint64(blockNr))
++	statedb, err := api.blockchain.StateAt(header.Root)
++	if err != nil {
++		return nil, err
++	}
++	return statedb.GetCode(address), nil
++}
++
++func (api *RetestethAPI) GetTransactionCount(ctx context.Context, address common.Address, blockNr math.HexOrDecimal64) (uint64, error) {
++	header := api.blockchain.GetHeaderByNumber(uint64(blockNr))
++	statedb, err := api.blockchain.StateAt(header.Root)
++	if err != nil {
++		return 0, err
++	}
++	return statedb.GetNonce(address), nil
++}
++
++func (api *RetestethAPI) StorageRangeAt(ctx context.Context,
++	blockHashOrNumber *math.HexOrDecimal256, txIndex uint64,
++	address common.Address,
++	begin *math.HexOrDecimal256, maxResults uint64,
++) (StorageRangeResult, error) {
++	var (
++		header *types.Header
++		block  *types.Block
++	)
++	if (*big.Int)(blockHashOrNumber).Cmp(big.NewInt(math.MaxInt64)) > 0 {
++		blockHash := common.BigToHash((*big.Int)(blockHashOrNumber))
++		header = api.blockchain.GetHeaderByHash(blockHash)
++		block = api.blockchain.GetBlockByHash(blockHash)
++		//fmt.Printf("Storage range: %x, txIndex %d, addr: %x, start: %x, maxResults: %d\n",
++		//	blockHash, txIndex, address, common.BigToHash((*big.Int)(begin)), maxResults)
++	} else {
++		blockNumber := (*big.Int)(blockHashOrNumber).Uint64()
++		header = api.blockchain.GetHeaderByNumber(blockNumber)
++		block = api.blockchain.GetBlockByNumber(blockNumber)
++		//fmt.Printf("Storage range: %d, txIndex %d, addr: %x, start: %x, maxResults: %d\n",
++		//	blockNumber, txIndex, address, common.BigToHash((*big.Int)(begin)), maxResults)
++	}
++	parentHeader := api.blockchain.GetHeaderByHash(header.ParentHash)
++	var root common.Hash
++	var statedb *state.StateDB
++	var err error
++	if parentHeader == nil || int(txIndex) >= len(block.Transactions()) {
++		root = header.Root
++		statedb, err = api.blockchain.StateAt(root)
++		if err != nil {
++			return StorageRangeResult{}, err
++		}
++	} else {
++		root = parentHeader.Root
++		statedb, err = api.blockchain.StateAt(root)
++		if err != nil {
++			return StorageRangeResult{}, err
++		}
++		// Recompute transactions up to the target index.
++		signer := types.MakeSigner(api.blockchain.Config(), block.Number())
++		for idx, tx := range block.Transactions() {
++			// Assemble the transaction call message and return if the requested offset
++			msg, _ := tx.AsMessage(signer)
++			context := core.NewEVMContext(msg, block.Header(), api.blockchain, nil)
++			// Not yet the searched for transaction, execute on top of the current state
++			vmenv := vm.NewEVM(context, statedb, api.blockchain.Config(), vm.Config{})
++			if _, err := core.ApplyMessage(vmenv, msg, new(core.GasPool).AddGas(tx.Gas())); err != nil {
++				return StorageRangeResult{}, fmt.Errorf("transaction %#x failed: %v", tx.Hash(), err)
++			}
++			// Ensure any modifications are committed to the state
++			// Only delete empty objects if EIP158/161 (a.k.a Spurious Dragon) is in effect
++			_ = statedb.IntermediateRoot(vmenv.ChainConfig().IsEIP158(block.Number()))
++			if idx == int(txIndex) {
++				// This is to make sure root can be opened by OpenTrie
++				_, err = statedb.Commit(vmenv.ChainConfig().IsEIP158(block.Number()))
++				if err != nil {
++					return StorageRangeResult{}, err
++				}
++			}
++		}
++	}
++	storageTrie := statedb.StorageTrie(address)
++	it := trie.NewIterator(storageTrie.NodeIterator(common.BigToHash((*big.Int)(begin)).Bytes()))
++	result := StorageRangeResult{Storage: make(map[common.Hash]SRItem)}
++	for i := 0; /*i < int(maxResults) && */ it.Next(); i++ {
++		if preimage := storageTrie.GetKey(it.Key); preimage != nil {
++			key := (*math.HexOrDecimal256)(big.NewInt(0).SetBytes(preimage))
++			v, _, err := rlp.SplitString(it.Value)
++			if err != nil {
++				return StorageRangeResult{}, err
++			}
++			value := (*math.HexOrDecimal256)(big.NewInt(0).SetBytes(v))
++			ks, _ := key.MarshalText()
++			vs, _ := value.MarshalText()
++			if len(ks)%2 != 0 {
++				ks = append(append(append([]byte{}, ks[:2]...), byte('0')), ks[2:]...)
++			}
++			if len(vs)%2 != 0 {
++				vs = append(append(append([]byte{}, vs[:2]...), byte('0')), vs[2:]...)
++			}
++			result.Storage[common.BytesToHash(it.Key)] = SRItem{
++				Key:   string(ks),
++				Value: string(vs),
++			}
++		}
++	}
++	if it.Next() {
++		result.Complete = false
++	} else {
++		result.Complete = true
++	}
++	return result, nil
++}
++
++func (api *RetestethAPI) ClientVersion(ctx context.Context) (string, error) {
++	return "Geth-" + params.VersionWithCommit(gitCommit, gitDate), nil
++}
++
++func retesteth(ctx *cli.Context) error {
++	log.Info("Welcome to retesteth!")
++	// register signer API with server
++	var (
++		extapiURL string
++	)
++	apiImpl := &RetestethAPI{}
++	var testApi RetestethTestAPI = apiImpl
++	var ethApi RetestethEthAPI = apiImpl
++	var debugApi RetestethDebugAPI = apiImpl
++	var web3Api RetestWeb3API = apiImpl
++	rpcAPI := []rpc.API{
++		{
++			Namespace: "test",
++			Public:    true,
++			Service:   testApi,
++			Version:   "1.0",
++		},
++		{
++			Namespace: "eth",
++			Public:    true,
++			Service:   ethApi,
++			Version:   "1.0",
++		},
++		{
++			Namespace: "debug",
++			Public:    true,
++			Service:   debugApi,
++			Version:   "1.0",
++		},
++		{
++			Namespace: "web3",
++			Public:    true,
++			Service:   web3Api,
++			Version:   "1.0",
++		},
++	}
++	vhosts := utils.SplitAndTrim(ctx.GlobalString(utils.HTTPVirtualHostsFlag.Name))
++	cors := utils.SplitAndTrim(ctx.GlobalString(utils.HTTPCORSDomainFlag.Name))
++
++	// register apis and create handler stack
++	srv := rpc.NewServer()
++	err := node.RegisterApisFromWhitelist(rpcAPI, []string{"test", "eth", "debug", "web3"}, srv, false)
++	if err != nil {
++		utils.Fatalf("Could not register RPC apis: %w", err)
++	}
++	handler := node.NewHTTPHandlerStack(srv, cors, vhosts)
++
++	// start http server
++	var RetestethHTTPTimeouts = rpc.HTTPTimeouts{
++		ReadTimeout:  120 * time.Second,
++		WriteTimeout: 120 * time.Second,
++		IdleTimeout:  120 * time.Second,
++	}
++	httpEndpoint := fmt.Sprintf("%s:%d", ctx.GlobalString(utils.HTTPListenAddrFlag.Name), ctx.Int(rpcPortFlag.Name))
++	httpServer, _, err := node.StartHTTPEndpoint(httpEndpoint, RetestethHTTPTimeouts, handler)
++	if err != nil {
++		utils.Fatalf("Could not start RPC api: %v", err)
++	}
++	extapiURL = fmt.Sprintf("http://%s", httpEndpoint)
++	log.Info("HTTP endpoint opened", "url", extapiURL)
++
++	defer func() {
++		// Don't bother imposing a timeout here.
++		httpServer.Shutdown(context.Background())
++		log.Info("HTTP endpoint closed", "url", httpEndpoint)
++	}()
++
++	abortChan := make(chan os.Signal, 11)
++	signal.Notify(abortChan, os.Interrupt)
++
++	sig := <-abortChan
++	log.Info("Exiting...", "signal", sig)
++	return nil
++}
+diff --git a/consensus/clique/clique.go b/consensus/clique/clique.go
+index 7055563ac..75cc6ed35 100644
+--- a/consensus/clique/clique.go
++++ b/consensus/clique/clique.go
+@@ -592,7 +592,7 @@ func (c *Clique) Authorize(signer common.Address, signFn SignerFn) {
+ 
+ // Seal implements consensus.Engine, attempting to create a sealed block using
+ // the local signing credentials.
+-func (c *Clique) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- *types.Block, stop <-chan struct{}) error {
++func (c *Clique) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- types.SealResult, stop <-chan struct{}) error {
+ 	header := block.Header()
+ 
+ 	// Sealing the genesis block is not supported
+@@ -651,7 +651,7 @@ func (c *Clique) Seal(chain consensus.ChainHeaderReader, block *types.Block, res
+ 		}
+ 
+ 		select {
+-		case results <- block.WithSeal(header):
++		case results <- types.SealResult{Block: block.WithSeal(header)}:
+ 		default:
+ 			log.Warn("Sealing result is not read by miner", "sealhash", SealHash(header))
+ 		}
+diff --git a/consensus/consensus.go b/consensus/consensus.go
+index 1aee61907..294c41cea 100644
+--- a/consensus/consensus.go
++++ b/consensus/consensus.go
+@@ -105,7 +105,7 @@ type Engine interface {
+ 	//
+ 	// Note, the method returns immediately and will send the result async. More
+ 	// than one result may also be returned depending on the consensus algorithm.
+-	Seal(chain ChainHeaderReader, block *types.Block, results chan<- *types.Block, stop <-chan struct{}) error
++	Seal(chain ChainHeaderReader, block *types.Block, results chan<- types.SealResult, stop <-chan struct{}) error
+ 
+ 	// SealHash returns the hash of a block prior to it being sealed.
+ 	SealHash(header *types.Header) common.Hash
+diff --git a/consensus/ethash/api.go b/consensus/ethash/api.go
+index 8cf0bbefd..0e32964cf 100644
+--- a/consensus/ethash/api.go
++++ b/consensus/ethash/api.go
+@@ -19,6 +19,7 @@ package ethash
+ import (
+ 	"errors"
+ 
++	"github.com/ethereum/go-ethereum/rpc"
+ 	"github.com/ethereumfair/go-ethereum/common"
+ 	"github.com/ethereumfair/go-ethereum/common/hexutil"
+ 	"github.com/ethereumfair/go-ethereum/core/types"
+@@ -38,49 +39,131 @@ type API struct {
+ //   result[1] - 32 bytes hex encoded seed hash used for DAG
+ //   result[2] - 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
+ //   result[3] - hex encoded block number
+-func (api *API) GetWork() ([4]string, error) {
++//   result[4], 32 bytes hex encoded parent block header pow-hash
++//   result[5], hex encoded gas limit
++//   result[6], hex encoded gas used
++//   result[7], hex encoded transaction count
++//   result[8], hex encoded uncle count
++//   result[9], RLP encoded header with additonal empty extra data bytes
++func (api *API) GetWork() ([10]string, error) {
+ 	if api.ethash.remote == nil {
+-		return [4]string{}, errors.New("not supported")
++		return [10]string{}, errors.New("not supported")
+ 	}
+ 
+ 	var (
+-		workCh = make(chan [4]string, 1)
++		workCh = make(chan [10]string, 1)
+ 		errc   = make(chan error, 1)
+ 	)
+ 	select {
+ 	case api.ethash.remote.fetchWorkCh <- &sealWork{errc: errc, res: workCh}:
+ 	case <-api.ethash.remote.exitCh:
+-		return [4]string{}, errEthashStopped
++		return [10]string{}, errEthashStopped
+ 	}
+ 	select {
+ 	case work := <-workCh:
+ 		return work, nil
+ 	case err := <-errc:
+-		return [4]string{}, err
++		return [10]string{}, err
+ 	}
+ }
+ 
+ // SubmitWork can be used by external miner to submit their POW solution.
+ // It returns an indication if the work was accepted.
+ // Note either an invalid solution, a stale work a non-existent work will return false.
+-func (api *API) SubmitWork(nonce types.BlockNonce, hash, digest common.Hash) bool {
++func (api *API) SubmitWork(nonce types.BlockNonce, hash, digest common.Hash, extraNonceStr *string) bool {
+ 	if api.ethash.remote == nil {
+ 		return false
+ 	}
+ 
++	var extraNonce []byte
++	if extraNonceStr != nil {
++		var err error
++		extraNonce, err = hexutil.Decode(*extraNonceStr)
++		if err != nil {
++			return false
++		}
++	}
++
+ 	var errc = make(chan error, 1)
++	var blockHashCh = make(chan common.Hash, 1)
+ 	select {
+ 	case api.ethash.remote.submitWorkCh <- &mineResult{
+-		nonce:     nonce,
+-		mixDigest: digest,
+-		hash:      hash,
+-		errc:      errc,
++		nonce:       nonce,
++		mixDigest:   digest,
++		hash:        hash,
++		extraNonce:  extraNonce,
++		errc:        errc,
++		blockHashCh: blockHashCh,
+ 	}:
+ 	case <-api.ethash.remote.exitCh:
+ 		return false
+ 	}
+-	err := <-errc
+-	return err == nil
++	select {
++	case <-errc:
++		return false
++	case <-blockHashCh:
++		return true
++	}
++}
++
++// SubmitWorkDetail is similar to eth_submitWork but will return the block hash on success,
++// and return an explicit error message on failure.
++//
++// Params (same as `eth_submitWork`):
++//   [
++//       "<nonce>",
++//       "<pow_hash>",
++//       "<mix_hash>"
++//   ]
++//
++// Result on success:
++//   "block_hash"
++//
++// Error on failure:
++//   {code: -32005, message: "Cannot submit work.", data: "<reason for submission failure>"}
++//
++// See the original proposal here: <https://github.com/paritytech/parity-ethereum/pull/9404>
++//
++func (api *API) SubmitWorkDetail(nonce types.BlockNonce, hash, digest common.Hash, extraNonceStr *string) (blockHash common.Hash, err rpc.ErrorWithInfo) {
++	if api.ethash.remote == nil {
++		err = cannotSubmitWorkError{"not supported"}
++		return
++	}
++
++	var extraNonce []byte
++	if extraNonceStr != nil {
++		var errorDecode error
++		extraNonce, errorDecode = hexutil.Decode(*extraNonceStr)
++		if errorDecode != nil {
++			err = cannotSubmitWorkError{"invalid extra nonce"}
++			return
++		}
++	}
++
++	var errc = make(chan error, 1)
++	var blockHashCh = make(chan common.Hash, 1)
++
++	select {
++	case api.ethash.remote.submitWorkCh <- &mineResult{
++		nonce:       nonce,
++		mixDigest:   digest,
++		hash:        hash,
++		errc:        errc,
++		extraNonce:  extraNonce,
++		blockHashCh: blockHashCh,
++	}:
++	case <-api.ethash.remote.exitCh:
++		err = cannotSubmitWorkError{errEthashStopped.Error()}
++		return
++	}
++
++	select {
++	case submitErr := <-errc:
++		err = cannotSubmitWorkError{submitErr.Error()}
++		return
++	case blockHash = <-blockHashCh:
++		return
++	}
+ }
+ 
+ // SubmitHashrate can be used for remote miners to submit their hash rate.
+diff --git a/consensus/ethash/errors.go b/consensus/ethash/errors.go
+new file mode 100644
+index 000000000..27307155c
+--- /dev/null
++++ b/consensus/ethash/errors.go
+@@ -0,0 +1,26 @@
++// Copyright 2019 The go-ethereum Authors
++// This file is part of the go-ethereum library.
++//
++// The go-ethereum library is free software: you can redistribute it and/or modify
++// it under the terms of the GNU Lesser General Public License as published by
++// the Free Software Foundation, either version 3 of the License, or
++// (at your option) any later version.
++//
++// The go-ethereum library is distributed in the hope that it will be useful,
++// but WITHOUT ANY WARRANTY; without even the implied warranty of
++// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
++// GNU Lesser General Public License for more details.
++//
++// You should have received a copy of the GNU Lesser General Public License
++// along with the go-ethereum library. If not, see <http://www.gnu.org/licenses/>.
++
++package ethash
++
++// cannotSubmitWorkError cannot submit a POW work
++type cannotSubmitWorkError struct{ info string }
++
++func (e cannotSubmitWorkError) ErrorCode() int { return -32005 }
++
++func (e cannotSubmitWorkError) Error() string { return "Cannot submit work." }
++
++func (e cannotSubmitWorkError) ErrorInfo() string { return e.info }
+diff --git a/consensus/ethash/ethash.go b/consensus/ethash/ethash.go
+index dbe8315d9..23fed0f45 100644
+--- a/consensus/ethash/ethash.go
++++ b/consensus/ethash/ethash.go
+@@ -690,6 +690,10 @@ func (ethash *Ethash) APIs(chain consensus.ChainHeaderReader) []rpc.API {
+ 			Namespace: "ethash",
+ 			Service:   &API{ethash},
+ 		},
++		{
++			Namespace: "parity",
++			Service:   &API{ethash},
++		},
+ 	}
+ }
+ 
+diff --git a/consensus/ethash/ethash_test.go b/consensus/ethash/ethash_test.go
+index 7e56084b9..2f69fa514 100644
+--- a/consensus/ethash/ethash_test.go
++++ b/consensus/ethash/ethash_test.go
+@@ -36,13 +36,14 @@ func TestTestMode(t *testing.T) {
+ 	ethash := NewTester(nil, false)
+ 	defer ethash.Close()
+ 
+-	results := make(chan *types.Block)
++	results := make(chan types.SealResult)
+ 	err := ethash.Seal(nil, types.NewBlockWithHeader(header), results, nil)
+ 	if err != nil {
+ 		t.Fatalf("failed to seal block: %v", err)
+ 	}
+ 	select {
+-	case block := <-results:
++	case result := <-results:
++		block := result.Block
+ 		header.Nonce = types.EncodeNonce(block.Nonce())
+ 		header.MixDigest = block.MixDigest()
+ 		if err := ethash.verifySeal(nil, header, false); err != nil {
+@@ -111,18 +112,18 @@ func TestRemoteSealer(t *testing.T) {
+ 	sealhash := ethash.SealHash(header)
+ 
+ 	// Push new work.
+-	results := make(chan *types.Block)
++	results := make(chan types.SealResult)
+ 	ethash.Seal(nil, block, results, nil)
+ 
+ 	var (
+-		work [4]string
++		work [10]string
+ 		err  error
+ 	)
+ 	if work, err = api.GetWork(); err != nil || work[0] != sealhash.Hex() {
+ 		t.Error("expect to return a mining work has same hash")
+ 	}
+ 
+-	if res := api.SubmitWork(types.BlockNonce{}, sealhash, common.Hash{}); res {
++	if res := api.SubmitWork(types.BlockNonce{}, sealhash, common.Hash{}, nil); res {
+ 		t.Error("expect to return false when submit a fake solution")
+ 	}
+ 	// Push new block with same block number to replace the original one.
+diff --git a/consensus/ethash/sealer.go b/consensus/ethash/sealer.go
+index d81372e7b..be9930061 100644
+--- a/consensus/ethash/sealer.go
++++ b/consensus/ethash/sealer.go
+@@ -34,6 +34,7 @@ import (
+ 	"github.com/ethereumfair/go-ethereum/common/hexutil"
+ 	"github.com/ethereumfair/go-ethereum/consensus"
+ 	"github.com/ethereumfair/go-ethereum/core/types"
++	"github.com/ethereumfair/go-ethereum/rlp"
+ )
+ 
+ const (
+@@ -48,13 +49,13 @@ var (
+ 
+ // Seal implements consensus.Engine, attempting to find a nonce that satisfies
+ // the block's difficulty requirements.
+-func (ethash *Ethash) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- *types.Block, stop <-chan struct{}) error {
++func (ethash *Ethash) Seal(chain consensus.ChainHeaderReader, block *types.Block, results chan<- types.SealResult, stop <-chan struct{}) error {
+ 	// If we're running a fake PoW, simply return a 0 nonce immediately
+ 	if ethash.config.PowMode == ModeFake || ethash.config.PowMode == ModeFullFake {
+ 		header := block.Header()
+ 		header.Nonce, header.MixDigest = types.BlockNonce{}, common.Hash{}
+ 		select {
+-		case results <- block.WithSeal(header):
++		case results <- types.SealResult{Block: block.WithSeal(header)}:
+ 		default:
+ 			ethash.config.Log.Warn("Sealing result is not read by miner", "mode", "fake", "sealhash", ethash.SealHash(block.Header()))
+ 		}
+@@ -109,7 +110,7 @@ func (ethash *Ethash) Seal(chain consensus.ChainHeaderReader, block *types.Block
+ 		case result = <-locals:
+ 			// One of the threads found a block, abort all others
+ 			select {
+-			case results <- result:
++			case results <- types.SealResult{Block: result}:
+ 			default:
+ 				ethash.config.Log.Warn("Sealing result is not read by miner", "mode", "local", "sealhash", ethash.SealHash(block.Header()))
+ 			}
+@@ -194,7 +195,7 @@ type remoteSealer struct {
+ 	works        map[common.Hash]*types.Block
+ 	rates        map[common.Hash]hashrate
+ 	currentBlock *types.Block
+-	currentWork  [4]string
++	currentWork  [10]string
+ 	notifyCtx    context.Context
+ 	cancelNotify context.CancelFunc // cancels all notification requests
+ 	reqWG        sync.WaitGroup     // tracks notification request goroutines
+@@ -202,7 +203,7 @@ type remoteSealer struct {
+ 	ethash       *Ethash
+ 	noverify     bool
+ 	notifyURLs   []string
+-	results      chan<- *types.Block
++	results      chan<- types.SealResult
+ 	workCh       chan *sealTask   // Notification channel to push new work and relative result channel to remote sealer
+ 	fetchWorkCh  chan *sealWork   // Channel used for remote sealer to fetch mining work
+ 	submitWorkCh chan *mineResult // Channel used for remote sealer to submit their mining result
+@@ -215,16 +216,18 @@ type remoteSealer struct {
+ // sealTask wraps a seal block with relative result channel for remote sealer thread.
+ type sealTask struct {
+ 	block   *types.Block
+-	results chan<- *types.Block
++	results chan<- types.SealResult
+ }
+ 
+ // mineResult wraps the pow solution parameters for the specified block.
+ type mineResult struct {
+-	nonce     types.BlockNonce
+-	mixDigest common.Hash
+-	hash      common.Hash
++	nonce      types.BlockNonce
++	mixDigest  common.Hash
++	hash       common.Hash
++	extraNonce []byte
+ 
+-	errc chan error
++	errc        chan error
++	blockHashCh chan common.Hash
+ }
+ 
+ // hashrate wraps the hash rate submitted by the remote sealer.
+@@ -239,7 +242,7 @@ type hashrate struct {
+ // sealWork wraps a seal work package for remote sealer.
+ type sealWork struct {
+ 	errc chan error
+-	res  chan [4]string
++	res  chan [10]string
+ }
+ 
+ func startRemoteSealer(ethash *Ethash, urls []string, noverify bool) *remoteSealer {
+@@ -294,10 +297,11 @@ func (s *remoteSealer) loop() {
+ 
+ 		case result := <-s.submitWorkCh:
+ 			// Verify submitted PoW solution based on maintained mining blocks.
+-			if s.submitWork(result.nonce, result.mixDigest, result.hash) {
+-				result.errc <- nil
++			blockHash, err := s.submitWork(result.nonce, result.mixDigest, result.hash, result.extraNonce)
++			if err == nil {
++				result.blockHashCh <- blockHash
+ 			} else {
+-				result.errc <- errInvalidSealResult
++				result.errc <- err
+ 			}
+ 
+ 		case result := <-s.submitRateCh:
+@@ -344,8 +348,14 @@ func (s *remoteSealer) loop() {
+ //	result[1], 32 bytes hex encoded seed hash used for DAG
+ //	result[2], 32 bytes hex encoded boundary condition ("target"), 2^256/difficulty
+ //	result[3], hex encoded block number
++//   result[4], 32 bytes hex encoded parent block header pow-hash
++//   result[5], hex encoded gas limit
++//   result[6], hex encoded gas used
++//   result[7], hex encoded transaction count
++//   result[8], hex encoded uncle count
+ func (s *remoteSealer) makeWork(block *types.Block) {
+-	hash := s.ethash.SealHash(block.Header())
++	header := block.Header()
++	hash := s.ethash.SealHash(header)
+ 
+ 	number := block.NumberU64()
+ 	// MilanoBlock fork
+@@ -357,6 +367,31 @@ func (s *remoteSealer) makeWork(block *types.Block) {
+ 	s.currentWork[1] = common.BytesToHash(SeedHash(number)).Hex()
+ 	s.currentWork[2] = common.BytesToHash(new(big.Int).Div(two256, block.Difficulty()).Bytes()).Hex()
+ 	s.currentWork[3] = hexutil.EncodeBig(big.NewInt(int64(number)))
++	s.currentWork[4] = block.ParentHash().Hex()
++	s.currentWork[5] = hexutil.EncodeUint64(block.GasLimit())
++	s.currentWork[6] = hexutil.EncodeUint64(block.GasUsed())
++	s.currentWork[7] = hexutil.EncodeUint64(uint64(len(block.Transactions())))
++	s.currentWork[8] = hexutil.EncodeUint64(uint64(len(block.Uncles())))
++
++	extra := append(header.Extra, make([]byte, 4)...)
++	encoded, err := rlp.EncodeToBytes([]interface{}{
++		header.ParentHash,
++		header.UncleHash,
++		header.Coinbase,
++		header.Root,
++		header.TxHash,
++		header.ReceiptHash,
++		header.Bloom,
++		header.Difficulty,
++		header.Number,
++		header.GasLimit,
++		header.GasUsed,
++		header.Time,
++		extra,
++	})
++	if err == nil {
++		s.currentWork[9] = hexutil.Encode(encoded)
++	}
+ 
+ 	// Trace the seal work fetched by remote sealer.
+ 	s.currentBlock = block
+@@ -383,7 +418,7 @@ func (s *remoteSealer) notifyWork() {
+ 	}
+ }
+ 
+-func (s *remoteSealer) sendNotification(ctx context.Context, url string, json []byte, work [4]string) {
++func (s *remoteSealer) sendNotification(ctx context.Context, url string, json []byte, work [10]string) {
+ 	defer s.reqWG.Done()
+ 
+ 	req, err := http.NewRequest("POST", url, bytes.NewReader(json))
+@@ -406,53 +441,64 @@ func (s *remoteSealer) sendNotification(ctx context.Context, url string, json []
+ }
+ 
+ // submitWork verifies the submitted pow solution, returning
+-// whether the solution was accepted or not (not can be both a bad pow as well as
+-// any other error, like no pending work or stale mining result).
+-func (s *remoteSealer) submitWork(nonce types.BlockNonce, mixDigest common.Hash, sealhash common.Hash) bool {
++// its block hash when success or an error when failed.
++func (s *remoteSealer) submitWork(nonce types.BlockNonce, mixDigest common.Hash, sealhash common.Hash, extraNonce []byte) (blockHash common.Hash, err error) {
+ 	if s.currentBlock == nil {
+-		s.ethash.config.Log.Error("Pending work without block", "sealhash", sealhash)
+-		return false
++		err = errors.New("Pending work without block")
++		s.ethash.config.Log.Error(err.Error(), "sealhash", sealhash)
++		return
+ 	}
+ 	// Make sure the work submitted is present
+ 	block := s.works[sealhash]
+ 	if block == nil {
+-		s.ethash.config.Log.Warn("Work submitted but none pending", "sealhash", sealhash, "curnumber", s.currentBlock.NumberU64())
+-		return false
++		err = errors.New("Work submitted but none pending")
++		s.ethash.config.Log.Warn(err.Error(), "sealhash", sealhash, "curnumber", s.currentBlock.NumberU64())
++		return
+ 	}
+ 	// Verify the correctness of submitted result.
+ 	header := block.Header()
+ 	header.Nonce = nonce
+ 	header.MixDigest = mixDigest
++	header.Extra = append(header.Extra, extraNonce...)
+ 
+ 	start := time.Now()
+ 	if !s.noverify {
+-		if err := s.ethash.verifySeal(nil, header, true); err != nil {
+-			s.ethash.config.Log.Warn("Invalid proof-of-work submitted", "sealhash", sealhash, "elapsed", common.PrettyDuration(time.Since(start)), "err", err)
+-			return false
++		if ethashErr := s.ethash.verifySeal(nil, header, true); ethashErr != nil {
++			err = errors.New("Invalid proof-of-work submitted")
++			s.ethash.config.Log.Warn(err.Error(), "sealhash", sealhash, "elapsed", common.PrettyDuration(time.Since(start)), "err", ethashErr)
++			return
+ 		}
+ 	}
+ 	// Make sure the result channel is assigned.
+ 	if s.results == nil {
+-		s.ethash.config.Log.Warn("Ethash result channel is empty, submitted mining result is rejected")
+-		return false
++		err = errors.New("Ethash result channel is empty, submitted mining result is rejected")
++		s.ethash.config.Log.Warn(err.Error())
++		return
+ 	}
+ 	s.ethash.config.Log.Trace("Verified correct proof-of-work", "sealhash", sealhash, "elapsed", common.PrettyDuration(time.Since(start)))
+ 
+ 	// Solutions seems to be valid, return to the miner and notify acceptance.
+ 	solution := block.WithSeal(header)
++	result := types.SealResult{
++		Block:    solution,
++		SealHash: &sealhash,
++	}
+ 
+ 	// The submitted solution is within the scope of acceptance.
+ 	if solution.NumberU64()+staleThreshold > s.currentBlock.NumberU64() {
+ 		select {
+-		case s.results <- solution:
++		case s.results <- result:
++			blockHash = solution.Hash()
+ 			s.ethash.config.Log.Debug("Work submitted is acceptable", "number", solution.NumberU64(), "sealhash", sealhash, "hash", solution.Hash())
+-			return true
++			return
+ 		default:
+-			s.ethash.config.Log.Warn("Sealing result is not read by miner", "mode", "remote", "sealhash", sealhash)
+-			return false
++			err = errors.New("Sealing result is not read by miner")
++			s.ethash.config.Log.Warn(err.Error(), "mode", "remote", "sealhash", sealhash)
++			return
+ 		}
+ 	}
+ 	// The submitted block is too old to accept, drop it.
+-	s.ethash.config.Log.Warn("Work submitted is too old", "number", solution.NumberU64(), "sealhash", sealhash, "hash", solution.Hash())
+-	return false
++	err = errors.New("Work submitted is too old")
++	s.ethash.config.Log.Warn(err.Error(), "number", solution.NumberU64(), "sealhash", sealhash, "hash", solution.Hash())
++	return
+ }
+diff --git a/consensus/ethash/sealer_test.go b/consensus/ethash/sealer_test.go
+index 6b836fb4a..34132a452 100644
+--- a/consensus/ethash/sealer_test.go
++++ b/consensus/ethash/sealer_test.go
+@@ -262,20 +262,21 @@ func TestStaleSubmission(t *testing.T) {
+ 			false,
+ 		},
+ 	}
+-	results := make(chan *types.Block, 16)
++	results := make(chan types.SealResult, 16)
+ 
+ 	for id, c := range testcases {
+ 		for _, h := range c.headers {
+ 			ethash.Seal(nil, types.NewBlockWithHeader(h), results, nil)
+ 		}
+-		if res := api.SubmitWork(fakeNonce, ethash.SealHash(c.headers[c.submitIndex]), fakeDigest); res != c.submitRes {
++		if res := api.SubmitWork(fakeNonce, ethash.SealHash(c.headers[c.submitIndex]), fakeDigest, nil); res != c.submitRes {
+ 			t.Errorf("case %d submit result mismatch, want %t, get %t", id+1, c.submitRes, res)
+ 		}
+ 		if !c.submitRes {
+ 			continue
+ 		}
+ 		select {
+-		case res := <-results:
++		case resPack := <-results:
++			res := resPack.Block
+ 			if res.Header().Nonce != fakeNonce {
+ 				t.Errorf("case %d block nonce mismatch, want %x, get %x", id+1, fakeNonce, res.Header().Nonce)
+ 			}
+diff --git a/core/types/block.go b/core/types/block.go
+index bb251a5db..ef0fd092b 100644
+--- a/core/types/block.go
++++ b/core/types/block.go
+@@ -178,6 +178,12 @@ type Block struct {
+ 	ReceivedFrom interface{}
+ }
+ 
++// SealResult is the result of the realing work
++type SealResult struct {
++	Block    *Block
++	SealHash *common.Hash
++}
++
+ // "external" block encoding. used for eth protocol, etc.
+ type extblock struct {
+ 	Header *Header
+diff --git a/miner/worker.go b/miner/worker.go
+index ba1718d5f..1d8c92024 100644
+--- a/miner/worker.go
++++ b/miner/worker.go
+@@ -205,7 +205,7 @@ type worker struct {
+ 	newWorkCh          chan *newWorkReq
+ 	getWorkCh          chan *getWorkReq
+ 	taskCh             chan *task
+-	resultCh           chan *types.Block
++	resultCh           chan types.SealResult
+ 	startCh            chan struct{}
+ 	exitCh             chan struct{}
+ 	resubmitIntervalCh chan time.Duration
+@@ -270,7 +270,7 @@ func newWorker(config *Config, chainConfig *params.ChainConfig, engine consensus
+ 		newWorkCh:          make(chan *newWorkReq),
+ 		getWorkCh:          make(chan *getWorkReq),
+ 		taskCh:             make(chan *task),
+-		resultCh:           make(chan *types.Block, resultQueueSize),
++		resultCh:           make(chan types.SealResult, resultQueueSize),
+ 		exitCh:             make(chan struct{}),
+ 		startCh:            make(chan struct{}, 1),
+ 		resubmitIntervalCh: make(chan time.Duration),
+@@ -684,7 +684,8 @@ func (w *worker) resultLoop() {
+ 	defer w.wg.Done()
+ 	for {
+ 		select {
+-		case block := <-w.resultCh:
++		case result := <-w.resultCh:
++			block := result.Block
+ 			// Short circuit when receiving empty result.
+ 			if block == nil {
+ 				continue
+@@ -694,9 +695,14 @@ func (w *worker) resultLoop() {
+ 				continue
+ 			}
+ 			var (
+-				sealhash = w.engine.SealHash(block.Header())
++				sealhash common.Hash
+ 				hash     = block.Hash()
+ 			)
++			if result.SealHash != nil {
++				sealhash = *result.SealHash
++			} else {
++				sealhash = w.engine.SealHash(block.Header())
++			}
+ 			w.pendingMu.RLock()
+ 			task, exist := w.pendingTasks[sealhash]
+ 			w.pendingMu.RUnlock()
+diff --git a/rpc/errors.go b/rpc/errors.go
+index 4c06a745f..49b812c64 100644
+--- a/rpc/errors.go
++++ b/rpc/errors.go
+@@ -45,6 +45,14 @@ type DataError interface {
+ 	ErrorData() interface{} // returns the error data
+ }
+ 
++// ErrorWithInfo wraps RPC errors with extra information, which contain an error code, a message
++// and an extra information about the error through info.
++type ErrorWithInfo interface {
++	Error() string     // returns the message
++	ErrorCode() int    // returns the code
++	ErrorInfo() string // returns the extra informationn
++}
++
+ // Error types defined below are the built-in JSON-RPC errors.
+ 
+ var (
+@@ -101,3 +109,26 @@ type invalidParamsError struct{ message string }
+ func (e *invalidParamsError) ErrorCode() int { return -32602 }
+ 
+ func (e *invalidParamsError) Error() string { return e.message }
++
++// logic error, callback returned an error
++type callbackError struct{ message string }
++
++func (e *callbackError) ErrorCode() int { return -32000 }
++
++func (e *callbackError) Error() string { return e.message }
++
++// issued when a request is received after the server is issued to stop.
++type shutdownError struct{}
++
++func (e *shutdownError) ErrorCode() int { return -32000 }
++
++func (e *shutdownError) Error() string { return "server is shutting down" }
++
++// CannotSubmitWorkError cannot submit a POW work
++type CannotSubmitWorkError struct{ data string }
++
++func (e *CannotSubmitWorkError) ErrorCode() int { return -32005 }
++
++func (e *CannotSubmitWorkError) Error() string { return "Cannot submit work." }
++
++func (e *CannotSubmitWorkError) ErrorData() interface{} { return e.data }
+diff --git a/rpc/json.go b/rpc/json.go
+index 6024f1e7d..cda1cde09 100644
+--- a/rpc/json.go
++++ b/rpc/json.go
+@@ -119,6 +119,11 @@ func errorMessage(err error) *jsonrpcMessage {
+ 	if ok {
+ 		msg.Error.Data = de.ErrorData()
+ 	}
++
++	// ei, ok := err.(ErrorWithInfo)
++	// if ok {
++	// 	msg.Error.Data = ei.ErrorInfo()
++	// }
+ 	return msg
+ }
+ 
+-- 
+2.37.1 (Apple Git-137.1)
+

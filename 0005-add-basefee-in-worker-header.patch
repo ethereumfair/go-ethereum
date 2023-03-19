@@ -1,0 +1,60 @@
+From cf15a32dab77b6dccac9c04e2b89fb9661524e6a Mon Sep 17 00:00:00 2001
+From: "zhen.li" <zhen.li@bitdeer.com>
+Date: Wed, 23 Jun 2021 16:44:09 +0800
+Subject: [PATCH 5/6] add basefee in worker header
+
+---
+ cmd/evm/internal/t8ntool/block.go |  5 +++--
+ consensus/ethash/sealer.go        | 10 ++++++++--
+ 2 files changed, 11 insertions(+), 4 deletions(-)
+
+diff --git a/cmd/evm/internal/t8ntool/block.go b/cmd/evm/internal/t8ntool/block.go
+index f7a5b76ba..a7a5c028e 100644
+--- a/cmd/evm/internal/t8ntool/block.go
++++ b/cmd/evm/internal/t8ntool/block.go
+@@ -187,11 +187,12 @@ func (i *bbInput) sealEthash(block *types.Block) (*types.Block, error) {
+ 	// Use a buffered chan for results.
+ 	// If the testmode is used, the sealer will return quickly, and complain
+ 	// "Sealing result is not read by miner" if it cannot write the result.
+-	results := make(chan *types.Block, 1)
++	results := make(chan types.SealResult, 1)
+ 	if err := engine.Seal(nil, block, results, nil); err != nil {
+ 		panic(fmt.Sprintf("failed to seal block: %v", err))
+ 	}
+-	found := <-results
++	result := <-results
++	found := result.Block
+ 	return block.WithSeal(found.Header()), nil
+ }
+ 
+diff --git a/consensus/ethash/sealer.go b/consensus/ethash/sealer.go
+index ee9138c23..eb51a504f 100644
+--- a/consensus/ethash/sealer.go
++++ b/consensus/ethash/sealer.go
+@@ -374,7 +374,8 @@ func (s *remoteSealer) makeWork(block *types.Block) {
+ 	s.currentWork[8] = hexutil.EncodeUint64(uint64(len(block.Uncles())))
+ 
+ 	extra := append(header.Extra, make([]byte, 4)...)
+-	encoded, err := rlp.EncodeToBytes([]interface{}{
++
++	enc := []interface{}{
+ 		header.ParentHash,
+ 		header.UncleHash,
+ 		header.Coinbase,
+@@ -388,7 +389,12 @@ func (s *remoteSealer) makeWork(block *types.Block) {
+ 		header.GasUsed,
+ 		header.Time,
+ 		extra,
+-	})
++	}
++	if header.BaseFee != nil {
++		enc = append(enc, header.BaseFee)
++	}
++
++	encoded, err := rlp.EncodeToBytes(enc)
+ 	if err == nil {
+ 		s.currentWork[9] = hexutil.Encode(encoded)
+ 	}
+-- 
+2.37.1 (Apple Git-137.1)
+

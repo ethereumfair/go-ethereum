@@ -1,0 +1,25 @@
+From c86e572d1b95ad6d9463f488d7ed216303a4f403 Mon Sep 17 00:00:00 2001
+From: "zhen.li" <zhen.li@bitdeer.com>
+Date: Fri, 16 Jul 2021 17:44:39 +0800
+Subject: [PATCH 1/6] docker use config.sh because of the-limit of config
+
+---
+ Dockerfile | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Dockerfile b/Dockerfile
+index 143c92f27..781d4234e 100644
+--- a/Dockerfile
++++ b/Dockerfile
+@@ -23,7 +23,7 @@ RUN apk add --no-cache ca-certificates
+ COPY --from=builder /go-ethereum/build/bin/geth /usr/local/bin/
+ 
+ EXPOSE 8545 8546 30303 30303/udp
+-ENTRYPOINT ["geth"]
++ENTRYPOINT ["sh", "/root/.ethereum/config.sh"]
+ 
+ # Add some metadata labels to help programatic image consumption
+ ARG COMMIT=""
+-- 
+2.37.1 (Apple Git-137.1)
+

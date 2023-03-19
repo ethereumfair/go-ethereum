@@ -1,0 +1,42 @@
+From c2a573531b822ace0027c88c901e7dceb68062d3 Mon Sep 17 00:00:00 2001
+From: Perry <617201068@qq.com>
+Date: Fri, 17 Mar 2023 15:29:27 +0800
+Subject: [PATCH 6/6] =?UTF-8?q?=E4=BF=AE=E6=94=B9=E5=8C=85=E5=90=8D?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ consensus/ethash/api.go    | 2 +-
+ consensus/ethash/ethash.go | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/consensus/ethash/api.go b/consensus/ethash/api.go
+index 5f0bc3458..fe487a711 100644
+--- a/consensus/ethash/api.go
++++ b/consensus/ethash/api.go
+@@ -20,7 +20,7 @@ import (
+ 	"context"
+ 	"errors"
+ 
+-	"github.com/ethereum/go-ethereum/rpc"
++	"github.com/ethereumfair/go-ethereum/rpc"
+ 	"github.com/ethereumfair/go-ethereum/common"
+ 	"github.com/ethereumfair/go-ethereum/common/hexutil"
+ 	"github.com/ethereumfair/go-ethereum/core/types"
+diff --git a/consensus/ethash/ethash.go b/consensus/ethash/ethash.go
+index 75a9b65b8..7c2a60c5a 100644
+--- a/consensus/ethash/ethash.go
++++ b/consensus/ethash/ethash.go
+@@ -34,7 +34,7 @@ import (
+ 	"unsafe"
+ 
+ 	"github.com/edsrzf/mmap-go"
+-	"github.com/ethereum/go-ethereum/event"
++	"github.com/ethereumfair/go-ethereum/event"
+ 	"github.com/ethereumfair/go-ethereum/consensus"
+ 	"github.com/ethereumfair/go-ethereum/log"
+ 	"github.com/ethereumfair/go-ethereum/metrics"
+-- 
+2.37.1 (Apple Git-137.1)
+
