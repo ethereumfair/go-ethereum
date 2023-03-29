@@ -61,10 +61,11 @@ var (
 
 	// RopstenChainConfig contains the chain parameters to run a node on the Ropsten test network.
 	TestnetChainConfig = &ChainConfig{
-		ChainID:    big.NewInt(22550),
-		DogeBlock:  big.NewInt(110000),
-		AkitaBlock: big.NewInt(140000),
-		Ethash:     new(EthashConfig),
+		ChainID:     big.NewInt(22550),
+		DogeBlock:   big.NewInt(110000),
+		AkitaBlock:  big.NewInt(140000),
+		BeagleBlock: big.NewInt(240000),
+		Ethash:      new(EthashConfig),
 	}
 
 	// RopstenTrustedCheckpoint contains the light client trusted checkpoint for the Ropsten test network.
@@ -78,14 +79,14 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, new(EthashConfig), nil}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, nil, new(EthashConfig), nil}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), nil, nil, nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
 )
 
 // NetworkNames are user friendly names to use in the chain spec banner.
@@ -153,7 +154,8 @@ type ChainConfig struct {
 
 	DogeBlock *big.Int `json:"dogeBlock,omitempty"`
 
-	AkitaBlock *big.Int `json:"akitaBlock,omitempty"`
+	AkitaBlock  *big.Int `json:"akitaBlock,omitempty"`
+	BeagleBlock *big.Int `json:"beagleBlock,omitempty"`
 
 	//HomesteadBlock *big.Int `json:"homesteadBlock,omitempty"` // Homestead switch block (nil = no fork, 0 = already homestead)
 	//
@@ -242,6 +244,10 @@ func (c *ChainConfig) ChainId() *big.Int {
 
 func (c *ChainConfig) IsAkita(num *big.Int) bool {
 	return isForked(c.AkitaBlock, num)
+}
+
+func (c *ChainConfig) IsBeagle(num *big.Int) bool {
+	return isForked(c.BeagleBlock, num)
 }
 
 //
@@ -520,19 +526,19 @@ func (c *ChainConfig) Rules(num *big.Int, isMerge bool) Rules {
 		chainID = new(big.Int)
 	}
 	return Rules{
-		ChainID: new(big.Int).Set(chainID),
-		//IsHomestead:      c.IsHomestead(num),
-		//IsEIP150:         c.IsEIP150(num),
-		//IsEIP155:         c.IsEIP155(num),
-		//IsEIP158:         c.IsEIP158(num),
-		//IsByzantium:      c.IsByzantium(num),
-		//IsConstantinople: c.IsConstantinople(num),
-		//IsPetersburg:     c.IsPetersburg(num),
-		//IsIstanbul:       c.IsIstanbul(num),
-		//IsBerlin:         c.IsBerlin(num),
-		//IsLondon:         c.IsLondon(num),
-		IsMerge: isMerge,
-		//IsShanghai:       c.IsShanghai(num),
-		//isCancun:         c.IsCancun(num),
+		ChainID:          new(big.Int).Set(chainID),
+		IsHomestead:      c.IsBeagle(num),
+		IsEIP150:         c.IsBeagle(num),
+		IsEIP155:         c.IsBeagle(num),
+		IsEIP158:         c.IsBeagle(num),
+		IsByzantium:      c.IsBeagle(num),
+		IsConstantinople: c.IsBeagle(num),
+		IsPetersburg:     c.IsBeagle(num),
+		IsIstanbul:       c.IsBeagle(num),
+		IsBerlin:         c.IsBeagle(num),
+		IsLondon:         c.IsBeagle(num),
+		IsMerge:          isMerge,
+		IsShanghai:       c.IsBeagle(num),
+		isCancun:         c.IsBeagle(num),
 	}
 }
