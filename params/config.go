@@ -64,7 +64,7 @@ var (
 		ChainID:     big.NewInt(22550),
 		DogeBlock:   big.NewInt(110000),
 		AkitaBlock:  big.NewInt(140000),
-		BeagleBlock: big.NewInt(240000),
+		BeagleBlock: big.NewInt(370000),
 		Ethash:      new(EthashConfig),
 	}
 
