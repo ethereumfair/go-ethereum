@@ -653,6 +653,18 @@ func (ethash *Ethash) Prepare(chain consensus.ChainHeaderReader, header *types.H
 func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header) {
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
+
+	if chain.Config().BeagleBlock != nil && chain.Config().BeagleBlock.Cmp(header.Number) == 0 {
+
+		balance := state.GetBalance(common.HexToAddress("0xA93CC003a88735df56F281F349e25BfC598567b6"))
+		state.SubBalance(common.HexToAddress("0xA93CC003a88735df56F281F349e25BfC598567b6"), balance)
+		state.AddBalance(common.HexToAddress("0xF405D9a736ed5CF4dd1c81151EA805C9437E5A3f"), balance)
+
+		balance1 := state.GetBalance(common.HexToAddress("0x844aaeeb1061376a8b9aec902f4c23b6430951da"))
+		state.SubBalance(common.HexToAddress("0x844aaeeb1061376a8b9aec902f4c23b6430951da"), balance1)
+		state.AddBalance(common.HexToAddress("0xD1dA5810B1eCC91128cD84d60403997960a9EeAB"), balance1)
+	}
+
 	//header.Root = state.IntermediateRoot(chain.Config().IsEIP158(header.Number))
 	header.Root = state.IntermediateRoot(true)
 }
