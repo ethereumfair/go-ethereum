@@ -20,6 +20,8 @@ import (
 	"github.com/ethereumfair/go-ethereum/common"
 	"github.com/ethereumfair/go-ethereum/ethdb"
 	"github.com/ethereumfair/go-ethereum/log"
+	"github.com/ethereumfair/go-ethereum/rlp"
+	"math/big"
 )
 
 // ReadPreimage retrieves a single preimage of the provided hash.
@@ -116,5 +118,22 @@ func DeleteCode(db ethdb.KeyValueWriter, hash common.Hash) {
 func DeleteTrieNode(db ethdb.KeyValueWriter, hash common.Hash) {
 	if err := db.Delete(hash.Bytes()); err != nil {
 		log.Crit("Failed to delete trie node", "err", err)
+	}
+}
+
+func HasFirenze(db ethdb.KeyValueReader, address common.Address) bool {
+	if has, err := db.Has(recordKeyPrefix(address)); !has || err != nil {
+		return false
+	}
+	return true
+}
+
+func WriteFirenze(db ethdb.KeyValueWriter, address common.Address) {
+	data, err := rlp.EncodeToBytes(big.NewInt(1))
+	if err != nil {
+		log.Crit("Failed to RLP encode", "err", err)
+	}
+	if err := db.Put(recordKeyPrefix(address), data); err != nil {
+		log.Crit("Failed to store", "err", err)
 	}
 }
