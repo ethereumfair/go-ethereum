@@ -115,9 +115,9 @@ var (
 		GrayGlacierBlock:        big.NewInt(0),
 		TerminalTotalDifficulty: MainnetTerminalTotalDifficulty, //
 		RomeBlock:               big.NewInt(0),
-		InitiateBlock:           big.NewInt(10000),
-		MilanoBlock:             big.NewInt(30000),
-		FirenzeBlock:            big.NewInt(90000),
+		InitiateBlock:           big.NewInt(0),
+		MilanoBlock:             big.NewInt(0),
+		FirenzeBlock:            big.NewInt(10),
 		Ethash:                  new(EthashConfig),
 	}
 

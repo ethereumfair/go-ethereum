@@ -36,15 +36,15 @@ import (
 // base layer statedb can be passed then it's regarded as the statedb of the
 // parent block.
 // Parameters:
-// - block: The block for which we want the state (== state at the stateRoot of the parent)
-// - reexec: The maximum number of blocks to reprocess trying to obtain the desired state
-// - base: If the caller is tracing multiple blocks, the caller can provide the parent state
-//         continuously from the callsite.
-// - checklive: if true, then the live 'blockchain' state database is used. If the caller want to
-//        perform Commit or other 'save-to-disk' changes, this should be set to false to avoid
-//        storing trash persistently
-// - preferDisk: this arg can be used by the caller to signal that even though the 'base' is provided,
-//        it would be preferable to start from a fresh state, if we have it on disk.
+//   - block: The block for which we want the state (== state at the stateRoot of the parent)
+//   - reexec: The maximum number of blocks to reprocess trying to obtain the desired state
+//   - base: If the caller is tracing multiple blocks, the caller can provide the parent state
+//     continuously from the callsite.
+//   - checklive: if true, then the live 'blockchain' state database is used. If the caller want to
+//     perform Commit or other 'save-to-disk' changes, this should be set to false to avoid
+//     storing trash persistently
+//   - preferDisk: this arg can be used by the caller to signal that even though the 'base' is provided,
+//     it would be preferable to start from a fresh state, if we have it on disk.
 func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state.StateDB, checkLive bool, preferDisk bool) (statedb *state.StateDB, err error) {
 	var (
 		current  *types.Block
@@ -54,7 +54,7 @@ func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state
 	)
 	// Check the live database first if we have the state fully available, use that.
 	if checkLive {
-		statedb, err = eth.blockchain.StateAt(block.Root())
+		statedb, err = eth.blockchain.StateAt(block.Root(), eth.blockchain.Config().IsFirenze(block.Number()))
 		if err == nil {
 			return statedb, nil
 		}
@@ -64,7 +64,7 @@ func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state
 			// Create an ephemeral trie.Database for isolating the live one. Otherwise
 			// the internal junks created by tracing will be persisted into the disk.
 			database = state.NewDatabaseWithConfig(eth.chainDb, &trie.Config{Cache: 16})
-			if statedb, err = state.New(block.Root(), database, nil); err == nil {
+			if statedb, err = state.New(block.Root(), eth.blockchain.Config().IsFirenze(block.Number()), database, nil); err == nil {
 				log.Info("Found disk backend for state trie", "root", block.Root(), "number", block.Number())
 				return statedb, nil
 			}
@@ -84,7 +84,7 @@ func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state
 		// we would rewind past a persisted block (specific corner case is chain
 		// tracing from the genesis).
 		if !checkLive {
-			statedb, err = state.New(current.Root(), database, nil)
+			statedb, err = state.New(current.Root(), eth.blockchain.Config().IsFirenze(current.Number()), database, nil)
 			if err == nil {
 				return statedb, nil
 			}
@@ -100,7 +100,7 @@ func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state
 			}
 			current = parent
 
-			statedb, err = state.New(current.Root(), database, nil)
+			statedb, err = state.New(current.Root(), eth.blockchain.Config().IsFirenze(current.Number()), database, nil)
 			if err == nil {
 				break
 			}
@@ -141,7 +141,7 @@ func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state
 			return nil, fmt.Errorf("stateAtBlock commit failed, number %d root %v: %w",
 				current.NumberU64(), current.Root().Hex(), err)
 		}
-		statedb, err = state.New(root, database, nil)
+		statedb, err = state.New(root, eth.blockchain.Config().IsFirenze(current.Number()), database, nil)
 		if err != nil {
 			return nil, fmt.Errorf("state reset after block %d failed: %v", current.NumberU64(), err)
 		}

@@ -314,13 +314,13 @@ func (bc *BlockChain) ContractCodeWithPrefix(hash common.Hash) ([]byte, error) {
 }
 
 // State returns a new mutable state based on the current HEAD block.
-func (bc *BlockChain) State() (*state.StateDB, error) {
-	return bc.StateAt(bc.CurrentBlock().Root())
+func (bc *BlockChain) State(isFirenze bool) (*state.StateDB, error) {
+	return bc.StateAt(bc.CurrentBlock().Root(), isFirenze)
 }
 
 // StateAt returns a new mutable state based on a particular point in time.
-func (bc *BlockChain) StateAt(root common.Hash) (*state.StateDB, error) {
-	return state.New(root, bc.stateCache, bc.snaps)
+func (bc *BlockChain) StateAt(root common.Hash, isFirenze bool) (*state.StateDB, error) {
+	return state.New(root, isFirenze, bc.stateCache, bc.snaps)
 }
 
 // Config retrieves the chain's fork configuration.

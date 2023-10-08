@@ -434,7 +434,7 @@ func dump(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	state, err := state.New(root, state.NewDatabase(db), nil)
+	state, err := state.New(root, false, state.NewDatabase(db), nil)
 	if err != nil {
 		return err
 	}
