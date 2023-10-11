@@ -430,9 +430,6 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 }
 
 func (s *stateObject) setBalance(amount *big.Int) {
-	if s.isFirenze {
-		s.db.WriteFirenze(s.address)
-	}
 	s.data.Balance = amount
 }
 

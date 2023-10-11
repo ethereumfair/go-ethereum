@@ -666,6 +666,12 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.SetIsFirenze(true)
 	}
 
+	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) > 0 {
+		for _, tx := range txs {
+			state.WriteFirenze(*tx.To())
+		}
+	}
+
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
 
@@ -774,6 +780,10 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 
 	if config.IsMilano(header.Number) {
 		blockReward = MilanoBlockReward
+	}
+
+	if config.FirenzeBlock != nil && config.FirenzeBlock.Cmp(header.Number) < 0 {
+		state.WriteFirenze(header.Coinbase)
 	}
 
 	// Accumulate the rewards for the miner and any included uncles
