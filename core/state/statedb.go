@@ -405,14 +405,15 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	stateObject := s.GetOrNewStateObject(addr)
 	if stateObject != nil {
-		if s.isFirenze && !s.HasFirenze(addr) {
-			s.WriteFirenze(addr)
-		}
+		//if s.isFirenze && !s.HasFirenze(addr) {
+		//	s.WriteFirenze(addr)
+		//}
 		stateObject.SetBalance(amount)
 	}
 }
 
 func (s *StateDB) WriteFirenze(addr common.Address) {
+	log.Info("WriteFirenze", "addr", addr.String())
 	rawdb.WriteFirenze(s.db.TrieDB().DiskDB(), addr)
 }
 
@@ -524,16 +525,20 @@ func (s *StateDB) getStateObject(addr common.Address) *stateObject {
 // flag set. This is needed by the state journal to revert to the correct s-
 // destructed object instead of wiping all knowledge about the state object.
 func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
+	log.Info("getDeletedStateObject", "isFirenze", s.isFirenze, "addr", addr.String(), "HasFirenze", s.HasFirenze(addr))
 	if s.isFirenze && !s.HasFirenze(addr) {
 		// Prefer live objects if any is available
 		if obj := s.stateObjects[addr]; obj != nil {
 			obj.data.Balance = new(big.Int)
+			obj.isFirenze = s.isFirenze
+			obj.SetBalance(new(big.Int))
 			return obj
 		}
 
 		// If no live objects are available, attempt to use snapshots
 		var data *types.StateAccount
 		if s.snap != nil {
+
 			start := time.Now()
 			acc, err := s.snap.Account(crypto.HashData(s.hasher, addr.Bytes()))
 			if metrics.EnabledExpensive {
@@ -575,11 +580,13 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 		}
 		// Insert into the live set
 		obj := newObject(s, addr, *data, s.isFirenze)
+		obj.isFirenze = s.isFirenze
 		s.setStateObject(obj)
 		return obj
 	} else {
 		// Prefer live objects if any is available
 		if obj := s.stateObjects[addr]; obj != nil {
+			obj.isFirenze = s.isFirenze
 			return obj
 		}
 		// If no live objects are available, attempt to use snapshots
@@ -626,6 +633,7 @@ func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
 		}
 		// Insert into the live set
 		obj := newObject(s, addr, *data, s.isFirenze)
+		obj.isFirenze = s.isFirenze
 		s.setStateObject(obj)
 		return obj
 	}
@@ -662,6 +670,7 @@ func (s *StateDB) createObject(addr common.Address) (newobj, prev *stateObject) 
 	} else {
 		s.journal.append(resetObjectChange{prev: prev, prevdestruct: prevdestruct})
 	}
+	newobj.isFirenze = s.isFirenze
 	s.setStateObject(newobj)
 	if prev != nil && !prev.deleted {
 		return newobj, prev
@@ -734,6 +743,7 @@ func (s *StateDB) Copy() *StateDB {
 		logSize:             s.logSize,
 		preimages:           make(map[common.Hash][]byte, len(s.preimages)),
 		journal:             newJournal(),
+		isFirenze:           s.isFirenze,
 		hasher:              crypto.NewKeccakState(),
 	}
 	// Copy the dirty states, logs, and preimages

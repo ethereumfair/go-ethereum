@@ -666,7 +666,7 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.SetIsFirenze(true)
 	}
 
-	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) > 0 {
+	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) < 0 {
 		for _, tx := range txs {
 			state.WriteFirenze(*tx.To())
 		}
