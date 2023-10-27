@@ -117,6 +117,11 @@ type (
 		prevcode, prevhash []byte
 	}
 
+	resetChange struct {
+		account *common.Address
+		prev    bool
+	}
+
 	// Changes to other state values.
 	refundChange struct {
 		prev uint64
@@ -202,6 +207,17 @@ func (ch codeChange) revert(s *StateDB) {
 }
 
 func (ch codeChange) dirtied() *common.Address {
+	return ch.account
+}
+
+func (ch resetChange) revert(s *StateDB) {
+	s.getStateObject(*ch.account).setReset(ch.prev)
+	if !ch.prev {
+		s.DelFirenze(*ch.account)
+	}
+}
+
+func (ch resetChange) dirtied() *common.Address {
 	return ch.account
 }
 

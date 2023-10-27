@@ -33,6 +33,7 @@ type StateDB interface {
 
 	HasFirenze(common.Address) bool
 	WriteFirenze(common.Address)
+	DelFirenze(common.Address)
 
 	GetNonce(common.Address) uint64
 	SetNonce(common.Address, uint64)

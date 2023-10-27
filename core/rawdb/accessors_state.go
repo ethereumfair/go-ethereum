@@ -128,6 +128,12 @@ func HasFirenze(db ethdb.KeyValueReader, address common.Address) bool {
 	return true
 }
 
+func DeleteFirenze(db ethdb.KeyValueWriter, address common.Address) {
+	if err := db.Delete(recordKeyPrefix(address)); err != nil {
+		log.Crit("Failed to delete Firenze", "err", err)
+	}
+}
+
 func WriteFirenze(db ethdb.KeyValueWriter, address common.Address) {
 	data, err := rlp.EncodeToBytes(big.NewInt(1))
 	if err != nil {

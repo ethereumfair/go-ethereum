@@ -94,6 +94,7 @@ type stateObject struct {
 	deleted   bool
 
 	isFirenze bool // true if the account is created in this transaction
+	reset     bool // true if the account is reset in this transaction
 }
 
 // empty returns whether the account is considered empty.
@@ -286,6 +287,18 @@ func (s *stateObject) SetStorage(storage map[common.Hash]common.Hash) {
 
 func (s *stateObject) setState(key, value common.Hash) {
 	s.dirtyStorage[key] = value
+}
+
+func (s *stateObject) SetReset(reset bool) {
+	s.db.journal.append(resetChange{
+		account: &s.address,
+		prev:    s.reset,
+	})
+	s.setReset(reset)
+}
+
+func (s *stateObject) setReset(reset bool) {
+	s.reset = reset
 }
 
 // finalise moves all dirty storage slots into the pending area to be hashed or
