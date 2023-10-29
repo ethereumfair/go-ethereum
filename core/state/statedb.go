@@ -405,10 +405,7 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	stateObject := s.GetOrNewStateObject(addr)
 	if stateObject != nil {
-		if s.isFirenze && !s.HasFirenze(addr) {
-			s.WriteFirenze(addr)
-			stateObject.SetReset(true)
-		}
+
 		stateObject.SetBalance(amount)
 	}
 }

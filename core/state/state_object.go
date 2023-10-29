@@ -439,6 +439,9 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 		account: &s.address,
 		prev:    new(big.Int).Set(s.data.Balance),
 	})
+	if s.reset && !s.db.HasFirenze(s.address) {
+		s.db.WriteFirenze(s.address)
+	}
 	s.setBalance(amount)
 }
 
