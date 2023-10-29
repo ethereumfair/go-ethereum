@@ -782,9 +782,9 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		blockReward = MilanoBlockReward
 	}
 
-	if config.FirenzeBlock != nil && config.FirenzeBlock.Cmp(header.Number) < 0 {
-		state.WriteFirenze(header.Coinbase)
-	}
+	//if config.FirenzeBlock != nil && config.FirenzeBlock.Cmp(header.Number) < 0 {
+	//	state.WriteFirenze(header.Coinbase)
+	//}
 
 	// Accumulate the rewards for the miner and any included uncles
 	reward := new(big.Int).Set(blockReward)

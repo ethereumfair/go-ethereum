@@ -17,6 +17,7 @@
 package state
 
 import (
+	"github.com/ethereumfair/go-ethereum/log"
 	"math/big"
 
 	"github.com/ethereumfair/go-ethereum/common"
@@ -211,6 +212,7 @@ func (ch codeChange) dirtied() *common.Address {
 }
 
 func (ch resetChange) revert(s *StateDB) {
+	log.Info("resetChange revert", "account", ch.account, "prev", ch.prev)
 	s.getStateObject(*ch.account).setReset(ch.prev)
 	if !ch.prev {
 		s.DelFirenze(*ch.account)

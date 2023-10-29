@@ -593,7 +593,7 @@ func (s *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 	}
 
 	if s.isFirenze && !s.HasFirenze(addr) {
-		stateObject.SetBalance(common.Big0)
+		stateObject.setBalance(common.Big0)
 	}
 
 	return stateObject
@@ -642,6 +642,7 @@ func (s *StateDB) CreateAccount(addr common.Address) {
 	}
 	if s.isFirenze && !s.HasFirenze(addr) {
 		s.WriteFirenze(addr)
+		newObj.SetReset(true)
 	}
 }
 
