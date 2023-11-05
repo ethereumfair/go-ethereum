@@ -405,13 +405,12 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	stateObject := s.GetOrNewStateObject(addr)
 	if stateObject != nil {
-
 		stateObject.SetBalance(amount)
 	}
 }
 
 func (s *StateDB) WriteFirenze(addr common.Address) {
-	log.Info("WriteFirenze", "addr", addr.String())
+	log.Warn("WriteFirenze", "addr", addr.String())
 	rawdb.WriteFirenze(s.db.TrieDB().DiskDB(), addr)
 }
 
@@ -957,6 +956,11 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 			if err != nil {
 				return common.Hash{}, err
 			}
+
+			if obj.reset {
+				s.WriteFirenze(obj.address)
+			}
+
 			// Merge the dirty nodes of storage trie into global set
 			if set != nil {
 				if err := nodes.Merge(set); err != nil {

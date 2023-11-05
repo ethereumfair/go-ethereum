@@ -328,6 +328,7 @@ func (s *stateObject) updateTrie(db Database) Trie {
 	if len(s.pendingStorage) == 0 {
 		return s.trie
 	}
+
 	// Track the amount of time wasted on updating the storage trie
 	if metrics.EnabledExpensive {
 		defer func(start time.Time) { s.db.StorageUpdates += time.Since(start) }(time.Now())
@@ -384,6 +385,7 @@ func (s *stateObject) updateRoot(db Database) {
 	if s.updateTrie(db) == nil {
 		return
 	}
+
 	// Track the amount of time wasted on hashing the storage trie
 	if metrics.EnabledExpensive {
 		defer func(start time.Time) { s.db.StorageHashes += time.Since(start) }(time.Now())
@@ -441,7 +443,7 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 		prev:    new(big.Int).Set(s.data.Balance),
 	})
 	if s.db.isFirenze && !s.db.HasFirenze(s.address) {
-		s.db.WriteFirenze(s.address)
+		log.Warn("SetBalance", "address", s.address, "balance", amount, "firenze", s.db.HasFirenze(s.address))
 		s.SetReset(true)
 	}
 	s.setBalance(amount)
@@ -463,6 +465,7 @@ func (s *stateObject) deepCopy(db *StateDB) *stateObject {
 	stateObject.suicided = s.suicided
 	stateObject.dirtyCode = s.dirtyCode
 	stateObject.deleted = s.deleted
+	stateObject.reset = s.reset
 	return stateObject
 }
 
