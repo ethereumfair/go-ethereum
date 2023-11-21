@@ -117,7 +117,7 @@ var (
 		RomeBlock:               big.NewInt(0),
 		InitiateBlock:           big.NewInt(0),
 		MilanoBlock:             big.NewInt(0),
-		FirenzeBlock:            big.NewInt(10),
+		FirenzeBlock:            big.NewInt(10000),
 		Ethash:                  new(EthashConfig),
 	}
 
