@@ -172,7 +172,7 @@ func (b *EthAPIBackend) StateAndHeaderByNumber(ctx context.Context, number rpc.B
 	if header == nil {
 		return nil, nil, errors.New("header not found")
 	}
-	stateDb, err := b.eth.BlockChain().StateAt(header.Root, b.ChainConfig().IsFirenze(header.Number))
+	stateDb, err := b.eth.BlockChain().StateAt(header.Root, b.ChainConfig().IsFirenze(header.Number), header.Number)
 	return stateDb, header, err
 }
 
@@ -191,7 +191,7 @@ func (b *EthAPIBackend) StateAndHeaderByNumberOrHash(ctx context.Context, blockN
 		if blockNrOrHash.RequireCanonical && b.eth.blockchain.GetCanonicalHash(header.Number.Uint64()) != hash {
 			return nil, nil, errors.New("hash is not currently canonical")
 		}
-		stateDb, err := b.eth.BlockChain().StateAt(header.Root, b.ChainConfig().IsFirenze(header.Number))
+		stateDb, err := b.eth.BlockChain().StateAt(header.Root, b.ChainConfig().IsFirenze(header.Number), header.Number)
 		return stateDb, header, err
 	}
 	return nil, nil, errors.New("invalid arguments; neither block nor hash specified")

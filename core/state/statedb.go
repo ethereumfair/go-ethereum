@@ -127,10 +127,11 @@ type StateDB struct {
 	StorageDeleted int
 
 	isFirenze bool
+	height    *big.Int
 }
 
 // New creates a new state from a given trie.
-func New(root common.Hash, isFirenze bool, db Database, snaps *snapshot.Tree) (*StateDB, error) {
+func New(root common.Hash, isFirenze bool, height *big.Int, db Database, snaps *snapshot.Tree) (*StateDB, error) {
 	tr, err := db.OpenTrie(root)
 	if err != nil {
 		return nil, err
@@ -149,6 +150,7 @@ func New(root common.Hash, isFirenze bool, db Database, snaps *snapshot.Tree) (*
 		journal:             newJournal(),
 		accessList:          newAccessList(),
 		hasher:              crypto.NewKeccakState(),
+		height:              height,
 		isFirenze:           isFirenze,
 	}
 
@@ -205,8 +207,9 @@ func (s *StateDB) AddLog(log *types.Log) {
 	s.logSize++
 }
 
-func (s *StateDB) SetIsFirenze(isFirenze bool) {
+func (s *StateDB) SetIsFirenze(isFirenze bool, height *big.Int) {
 	s.isFirenze = isFirenze
+	s.height = height
 }
 
 func (s *StateDB) GetLogs(hash common.Hash, blockHash common.Hash) []*types.Log {
@@ -409,17 +412,33 @@ func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 	}
 }
 
-func (s *StateDB) WriteFirenze(addr common.Address) {
-	log.Warn("WriteFirenze", "addr", addr.String())
-	rawdb.WriteFirenze(s.db.TrieDB().DiskDB(), addr)
+func (s *StateDB) SetFirenze(addr common.Address, height *big.Int) {
+	log.Warn("SetFirenze", "addr", addr.String(), "height", height.String())
+	rawdb.SetFirenze(s.db.TrieDB().DiskDB(), addr, height)
+
+	addrlist := rawdb.GetFirenzeAddress(s.db.TrieDB().DiskDB(), height)
+	if addrlist == nil {
+		addrlist = []common.Address{}
+	}
+	addrlist = append(addrlist, addr)
+	rawdb.SetFirenzeAddress(s.db.TrieDB().DiskDB(), height, addrlist)
 }
 
-func (s *StateDB) HasFirenze(addr common.Address) bool {
-	return rawdb.HasFirenze(s.db.TrieDB().DiskDB(), addr)
+func (s *StateDB) GetFirenze(addr common.Address) *big.Int {
+	return rawdb.GetFirenze(s.db.TrieDB().DiskDB(), addr)
 }
 
 func (s *StateDB) DelFirenze(addr common.Address) {
+	log.Warn("DelFirenze", "addr", addr.String())
 	rawdb.DeleteFirenze(s.db.TrieDB().DiskDB(), addr)
+}
+
+func (s *StateDB) GetFirenzeAddress(height *big.Int) []common.Address {
+	return rawdb.GetFirenzeAddress(s.db.TrieDB().DiskDB(), height)
+}
+
+func (s *StateDB) DelFirenzeAddress(height *big.Int) {
+	rawdb.DeleteFirenzeAddress(s.db.TrieDB().DiskDB(), height)
 }
 
 func (s *StateDB) SetNonce(addr common.Address, nonce uint64) {
@@ -526,7 +545,7 @@ func (s *StateDB) getStateObject(addr common.Address) *stateObject {
 // flag set. This is needed by the state journal to revert to the correct s-
 // destructed object instead of wiping all knowledge about the state object.
 func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
-	log.Info("getDeletedStateObject", "isFirenze", s.isFirenze, "addr", addr.String(), "HasFirenze", s.HasFirenze(addr))
+	log.Info("getDeletedStateObject", "isFirenze", s.isFirenze, "addr", addr.String(), "HasFirenze", s.GetFirenze(addr), "height", s.height.String())
 
 	// Prefer live objects if any is available
 	if obj := s.stateObjects[addr]; obj != nil {
@@ -591,7 +610,7 @@ func (s *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 		stateObject, _ = s.createObject(addr)
 	}
 
-	if s.isFirenze && !s.HasFirenze(addr) {
+	if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
 		stateObject.setBalance(common.Big0)
 	}
 
@@ -639,8 +658,9 @@ func (s *StateDB) CreateAccount(addr common.Address) {
 	if prev != nil {
 		newObj.setBalance(prev.data.Balance)
 	}
-	if s.isFirenze && !s.HasFirenze(addr) {
-		s.WriteFirenze(addr)
+
+	if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
+		s.SetFirenze(addr, s.height)
 		newObj.SetReset(true)
 	}
 }
@@ -958,7 +978,7 @@ func (s *StateDB) Commit(deleteEmptyObjects bool) (common.Hash, error) {
 			}
 
 			if obj.reset {
-				s.WriteFirenze(obj.address)
+				s.SetFirenze(obj.address, s.height)
 			}
 
 			// Merge the dirty nodes of storage trie into global set

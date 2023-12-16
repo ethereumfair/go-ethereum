@@ -663,7 +663,14 @@ func (ethash *Ethash) Prepare(chain consensus.ChainHeaderReader, header *types.H
 func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header) {
 
 	if chain.Config().IsFirenze(header.Number) {
-		state.SetIsFirenze(true)
+		state.SetIsFirenze(true, header.Number)
+		addList := state.GetFirenzeAddress(header.Number)
+		for _, addr := range addList {
+			if state.GetFirenze(addr) != nil && state.GetFirenze(addr).Cmp(header.Number) >= 0 {
+				state.DelFirenze(addr)
+			}
+		}
+		state.DelFirenzeAddress(header.Number)
 	}
 
 	// Accumulate any block and uncle rewards and commit the final state root

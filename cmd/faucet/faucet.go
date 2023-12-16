@@ -890,12 +890,13 @@ func getGenesis(genesisFlag string, goerliFlag bool, rinkebyFlag bool, sepoliaFl
 		err := common.LoadJSON(genesisFlag, &genesis)
 		return &genesis, err
 	case goerliFlag:
-		return core.DefaultGoerliGenesisBlock(), nil
+		//return core.DefaultGoerliGenesisBlock(), nil
 	case rinkebyFlag:
-		return core.DefaultRinkebyGenesisBlock(), nil
+		//return core.DefaultRinkebyGenesisBlock(), nil
 	case sepoliaFlag:
-		return core.DefaultSepoliaGenesisBlock(), nil
+		//return core.DefaultSepoliaGenesisBlock(), nil
 	default:
 		return nil, fmt.Errorf("no genesis flag provided")
 	}
+	return nil, fmt.Errorf("no genesis flag provided")
 }

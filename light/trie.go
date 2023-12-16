@@ -37,7 +37,7 @@ var (
 
 func NewState(ctx context.Context, head *types.Header, odr OdrBackend) *state.StateDB {
 	// TODO: Temporary processing
-	state, _ := state.New(head.Root, false, NewStateDatabase(ctx, head, odr), nil)
+	state, _ := state.New(head.Root, false, head.Number, NewStateDatabase(ctx, head, odr), nil)
 	return state
 }
 

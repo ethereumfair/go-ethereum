@@ -17,6 +17,7 @@
 package rawdb
 
 import (
+	"fmt"
 	"github.com/ethereumfair/go-ethereum/common"
 	"github.com/ethereumfair/go-ethereum/ethdb"
 	"github.com/ethereumfair/go-ethereum/log"
@@ -121,11 +122,17 @@ func DeleteTrieNode(db ethdb.KeyValueWriter, hash common.Hash) {
 	}
 }
 
-func HasFirenze(db ethdb.KeyValueReader, address common.Address) bool {
-	if has, err := db.Has(recordKeyPrefix(address)); !has || err != nil {
-		return false
+func GetFirenze(db ethdb.KeyValueReader, address common.Address) *big.Int {
+	data, _ := db.Get(recordKeyPrefix(address))
+	if len(data) == 0 {
+		return nil
 	}
-	return true
+
+	var height *big.Int
+	if err := rlp.DecodeBytes(data, &height); err != nil {
+		log.Crit("Failed to RLP decode", "err", err)
+	}
+	return height
 }
 
 func DeleteFirenze(db ethdb.KeyValueWriter, address common.Address) {
@@ -134,12 +141,43 @@ func DeleteFirenze(db ethdb.KeyValueWriter, address common.Address) {
 	}
 }
 
-func WriteFirenze(db ethdb.KeyValueWriter, address common.Address) {
-	data, err := rlp.EncodeToBytes(big.NewInt(1))
+func SetFirenze(db ethdb.KeyValueWriter, address common.Address, height *big.Int) {
+	data, err := rlp.EncodeToBytes(height)
 	if err != nil {
 		log.Crit("Failed to RLP encode", "err", err)
 	}
 	if err := db.Put(recordKeyPrefix(address), data); err != nil {
 		log.Crit("Failed to store", "err", err)
+	}
+}
+
+func GetFirenzeAddress(db ethdb.KeyValueStore, height *big.Int) []common.Address {
+	data, _ := db.Get(recordKeyPrefixHeight(height.Uint64()))
+	if len(data) == 0 {
+		return nil
+	}
+
+	var address []common.Address
+	if err := rlp.DecodeBytes(data, &address); err != nil {
+		log.Crit("Failed to RLP decode", "err", err)
+	}
+	return address
+}
+
+func SetFirenzeAddress(db ethdb.KeyValueWriter, height *big.Int, address []common.Address) {
+	fmt.Println("SetFirenzeAddress", height, address)
+	data, err := rlp.EncodeToBytes(address)
+	if err != nil {
+		log.Crit("Failed to RLP encode", "err", err)
+	}
+
+	if err := db.Put(recordKeyPrefixHeight(height.Uint64()), data); err != nil {
+		log.Crit("Failed to store", "err", err)
+	}
+}
+
+func DeleteFirenzeAddress(db ethdb.KeyValueWriter, height *big.Int) {
+	if err := db.Delete(recordKeyPrefixHeight(height.Uint64())); err != nil {
+		log.Crit("Failed to delete Firenze", "err", err)
 	}
 }

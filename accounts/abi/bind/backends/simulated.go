@@ -140,7 +140,7 @@ func (b *SimulatedBackend) rollback(parent *types.Block) {
 
 	b.pendingBlock = blocks[0]
 
-	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(parent.Number()), b.blockchain.StateCache(), nil)
+	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(parent.Number()), parent.Number(), b.blockchain.StateCache(), nil)
 }
 
 // Fork creates a side-chain that can be used to simulate reorgs.
@@ -173,13 +173,13 @@ func (b *SimulatedBackend) Fork(ctx context.Context, parent common.Hash) error {
 // stateByBlockNumber retrieves a state by a given blocknumber.
 func (b *SimulatedBackend) stateByBlockNumber(ctx context.Context, blockNumber *big.Int) (*state.StateDB, error) {
 	if blockNumber == nil || blockNumber.Cmp(b.blockchain.CurrentBlock().Number()) == 0 {
-		return b.blockchain.State(b.blockchain.Config().IsFirenze(blockNumber))
+		return b.blockchain.State(b.blockchain.Config().IsFirenze(blockNumber), blockNumber)
 	}
 	block, err := b.blockByNumber(ctx, blockNumber)
 	if err != nil {
 		return nil, err
 	}
-	return b.blockchain.StateAt(block.Root(), b.blockchain.Config().IsFirenze(blockNumber))
+	return b.blockchain.StateAt(block.Root(), b.blockchain.Config().IsFirenze(blockNumber), blockNumber)
 }
 
 // CodeAt returns the code associated with a certain account in the blockchain.
@@ -432,7 +432,7 @@ func (b *SimulatedBackend) CallContract(ctx context.Context, call ethereum.CallM
 	if blockNumber != nil && blockNumber.Cmp(b.blockchain.CurrentBlock().Number()) != 0 {
 		return nil, errBlockNumberUnsupported
 	}
-	stateDB, err := b.blockchain.State(b.blockchain.Config().IsFirenze(blockNumber))
+	stateDB, err := b.blockchain.State(b.blockchain.Config().IsFirenze(blockNumber), blockNumber)
 	if err != nil {
 		return nil, err
 	}
@@ -679,10 +679,10 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 		}
 		block.AddTxWithChain(b.blockchain, tx)
 	})
-	stateDB, _ := b.blockchain.State(false)
+	stateDB, _ := b.blockchain.State(b.config.IsFirenze(b.pendingBlock.Number()), b.pendingBlock.Number())
 
 	b.pendingBlock = blocks[0]
-	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(b.pendingBlock.Number()), stateDB.Database(), nil)
+	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(b.pendingBlock.Number()), b.pendingBlock.Number(), stateDB.Database(), nil)
 	b.pendingReceipts = receipts[0]
 	return nil
 }
@@ -795,10 +795,10 @@ func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	blocks, _ := core.GenerateChain(b.config, b.blockchain.CurrentBlock(), ethash.NewFaker(), b.database, 1, func(number int, block *core.BlockGen) {
 		block.OffsetTime(int64(adjustment.Seconds()))
 	})
-	stateDB, _ := b.blockchain.State(b.blockchain.Config().IsFirenze(blocks[0].Number()))
+	stateDB, _ := b.blockchain.State(b.blockchain.Config().IsFirenze(blocks[0].Number()), blocks[0].Number())
 
 	b.pendingBlock = blocks[0]
-	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(b.pendingBlock.Number()), stateDB.Database(), nil)
+	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(b.pendingBlock.Number()), b.pendingBlock.Number(), stateDB.Database(), nil)
 
 	return nil
 }

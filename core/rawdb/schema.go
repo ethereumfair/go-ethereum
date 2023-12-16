@@ -104,7 +104,8 @@ var (
 	configPrefix   = []byte("ethereum-config-")  // config prefix for the db
 	genesisPrefix  = []byte("ethereum-genesis-") // genesis state prefix for the db
 
-	firenzePrefix = []byte("firenze-prefix") // genesis state prefix for the db
+	firenzePrefix       = []byte("firenze-prefix")        // genesis state prefix for the db
+	firenzePrefixHeight = []byte("firenze-prefix-height") // genesis state prefix for the db
 
 	// Chain index prefixes (use `i` + single byte to avoid mixing data types).
 	BloomBitsIndexPrefix = []byte("iB") // BloomBitsIndexPrefix is the data table of a chain indexer to track its progress
@@ -131,6 +132,11 @@ func encodeBlockNumber(number uint64) []byte {
 // FirenzeKey = FirenzePrefix + address
 func recordKeyPrefix(address common.Address) []byte {
 	return append(firenzePrefix, address.Bytes()...)
+}
+
+// FirenzeKey = FirenzePrefix + address
+func recordKeyPrefixHeight(height uint64) []byte {
+	return append(firenzePrefixHeight, encodeBlockNumber(height)...)
 }
 
 // headerKeyPrefix = headerPrefix + num (uint64 big endian)

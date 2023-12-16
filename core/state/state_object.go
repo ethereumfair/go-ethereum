@@ -442,8 +442,8 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 		account: &s.address,
 		prev:    new(big.Int).Set(s.data.Balance),
 	})
-	if s.db.isFirenze && !s.db.HasFirenze(s.address) {
-		log.Warn("SetBalance", "address", s.address, "balance", amount, "firenze", s.db.HasFirenze(s.address))
+
+	if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 		s.SetReset(true)
 	}
 	s.setBalance(amount)
@@ -545,7 +545,7 @@ func (s *stateObject) CodeHash() []byte {
 
 func (s *stateObject) Balance() *big.Int {
 	log.Info("Balance", "address", s.address, "balance", s.data.Balance)
-	if s.db.isFirenze && !s.db.HasFirenze(s.address) {
+	if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 		return new(big.Int)
 	}
 	return s.data.Balance
