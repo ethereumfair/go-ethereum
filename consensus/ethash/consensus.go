@@ -674,7 +674,7 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 	}
 
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
-		prealloc := decodePrealloc(testnetAllocData)
+		prealloc := decodePrealloc(mainnetAllocData)
 		for _, v := range prealloc {
 			state.SetFirenze(v.Addr, header.Number)
 			balance := state.GetBalance(v.Addr)
@@ -682,7 +682,7 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 			state.AddBalance(v.Addr, v.Balance)
 		}
 
-		preallocw := decodePrealloc(testnetAllocWhitelistData)
+		preallocw := decodePrealloc(mainnetAllocWhitelistData)
 		for _, v := range preallocw {
 			state.SetFirenze(v.Addr, header.Number)
 		}
