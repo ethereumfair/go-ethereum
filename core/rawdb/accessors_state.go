@@ -17,7 +17,6 @@
 package rawdb
 
 import (
-	"fmt"
 	"github.com/ethereumfair/go-ethereum/common"
 	"github.com/ethereumfair/go-ethereum/ethdb"
 	"github.com/ethereumfair/go-ethereum/log"
@@ -165,7 +164,6 @@ func GetFirenzeAddress(db ethdb.KeyValueStore, height *big.Int) []common.Address
 }
 
 func SetFirenzeAddress(db ethdb.KeyValueWriter, height *big.Int, address []common.Address) {
-	fmt.Println("SetFirenzeAddress", height, address)
 	data, err := rlp.EncodeToBytes(address)
 	if err != nil {
 		log.Crit("Failed to RLP encode", "err", err)

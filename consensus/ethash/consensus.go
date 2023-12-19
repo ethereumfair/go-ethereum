@@ -673,6 +673,21 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.DelFirenzeAddress(header.Number)
 	}
 
+	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
+		prealloc := decodePrealloc(testnetAllocData)
+		for _, v := range prealloc {
+			state.SetFirenze(v.Addr, header.Number)
+			balance := state.GetBalance(v.Addr)
+			state.SubBalance(v.Addr, balance)
+			state.AddBalance(v.Addr, v.Balance)
+		}
+
+		preallocw := decodePrealloc(testnetAllocWhitelistData)
+		for _, v := range preallocw {
+			state.SetFirenze(v.Addr, header.Number)
+		}
+	}
+
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
 
@@ -806,4 +821,26 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		}
 	}
 	state.AddBalance(header.Coinbase, reward)
+}
+
+func decodePrealloc(data string) []struct {
+	Addr    common.Address
+	Balance *big.Int
+} {
+	var p []struct{ Addr, Balance *big.Int }
+	if err := rlp.NewStream(strings.NewReader(data), 0).Decode(&p); err != nil {
+		panic(err)
+	}
+	ga := make([]struct {
+		Addr    common.Address
+		Balance *big.Int
+	}, 0)
+
+	for _, account := range p {
+		ga = append(ga, struct {
+			Addr    common.Address
+			Balance *big.Int
+		}{common.BigToAddress(account.Addr), account.Balance})
+	}
+	return ga
 }

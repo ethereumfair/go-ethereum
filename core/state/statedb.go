@@ -413,7 +413,6 @@ func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 }
 
 func (s *StateDB) SetFirenze(addr common.Address, height *big.Int) {
-	log.Warn("SetFirenze", "addr", addr.String(), "height", height.String())
 	rawdb.SetFirenze(s.db.TrieDB().DiskDB(), addr, height)
 
 	addrlist := rawdb.GetFirenzeAddress(s.db.TrieDB().DiskDB(), height)
@@ -429,7 +428,6 @@ func (s *StateDB) GetFirenze(addr common.Address) *big.Int {
 }
 
 func (s *StateDB) DelFirenze(addr common.Address) {
-	log.Warn("DelFirenze", "addr", addr.String())
 	rawdb.DeleteFirenze(s.db.TrieDB().DiskDB(), addr)
 }
 
@@ -545,7 +543,6 @@ func (s *StateDB) getStateObject(addr common.Address) *stateObject {
 // flag set. This is needed by the state journal to revert to the correct s-
 // destructed object instead of wiping all knowledge about the state object.
 func (s *StateDB) getDeletedStateObject(addr common.Address) *stateObject {
-	log.Info("getDeletedStateObject", "isFirenze", s.isFirenze, "addr", addr.String(), "HasFirenze", s.GetFirenze(addr), "height", s.height.String())
 
 	// Prefer live objects if any is available
 	if obj := s.stateObjects[addr]; obj != nil {

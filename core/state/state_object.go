@@ -19,7 +19,6 @@ package state
 import (
 	"bytes"
 	"fmt"
-	"github.com/ethereumfair/go-ethereum/log"
 	"io"
 	"math/big"
 	"time"
@@ -544,7 +543,6 @@ func (s *stateObject) CodeHash() []byte {
 }
 
 func (s *stateObject) Balance() *big.Int {
-	log.Info("Balance", "address", s.address, "balance", s.data.Balance)
 	if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 		return new(big.Int)
 	}
