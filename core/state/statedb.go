@@ -186,6 +186,10 @@ func (s *StateDB) StopPrefetcher() {
 	}
 }
 
+func (s *StateDB) SetHeight(height *big.Int) {
+	s.height = height
+}
+
 // setError remembers the first non-nil error it is called with.
 func (s *StateDB) setError(err error) {
 	if s.dbErr == nil {
