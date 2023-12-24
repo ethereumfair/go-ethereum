@@ -633,6 +633,7 @@ func (s *BlockChainAPI) GetBalance(ctx context.Context, address common.Address, 
 	if state == nil || err != nil {
 		return nil, err
 	}
+	state.SetHeight(s.b.CurrentHeader().Number)
 	return (*hexutil.Big)(state.GetBalance(address)), state.Error()
 }
 

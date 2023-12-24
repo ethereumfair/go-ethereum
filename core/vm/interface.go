@@ -37,6 +37,8 @@ type StateDB interface {
 	GetFirenzeAddress(height *big.Int) []common.Address
 	DelFirenzeAddress(height *big.Int)
 
+	SetHeight(*big.Int)
+
 	GetNonce(common.Address) uint64
 	SetNonce(common.Address, uint64)
 
