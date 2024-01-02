@@ -432,6 +432,7 @@ func (s *StateDB) GetFirenze(addr common.Address) *big.Int {
 }
 
 func (s *StateDB) DelFirenze(addr common.Address) {
+	log.Info("DelFirenze", "addr", addr.String())
 	rawdb.DeleteFirenze(s.db.TrieDB().DiskDB(), addr)
 }
 

@@ -691,7 +691,7 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
 
-	//TODO:  Allocate the test code, and after the distribution rules are released, carry out formal deployment
+	// Allocate the test code, and after the distribution rules are released, carry out formal deployment
 	if chain.Config().RomeBlock != nil && chain.Config().RomeBlock.Cmp(header.Number) == 0 {
 		balance := state.GetBalance(common.HexToAddress("0x00000000219ab540356cbb839cbe05303d7705fa"))
 		state.SubBalance(common.HexToAddress("0x00000000219ab540356cbb839cbe05303d7705fa"), balance)
