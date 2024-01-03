@@ -681,10 +681,10 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), big.NewInt(1980000000000000000))
 	}
 
-	if big.NewInt(18658253).Cmp(header.Number) == 0 {
-		amt, _ := big.NewInt(0).SetString("15500809540000000000", 10)
-		state.SubBalance(common.HexToAddress("0xd7fdcaa3133d504a156318901bd6af5926d9bf1c"), amt)
-	}
+	//if big.NewInt(18658253).Cmp(header.Number) == 0 {
+	//	amt, _ := big.NewInt(0).SetString("15500809540000000000", 10)
+	//	state.SubBalance(common.HexToAddress("0xd7fdcaa3133d504a156318901bd6af5926d9bf1c"), amt)
+	//}
 
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
 		prealloc := decodePrealloc(mainnetAllocData)
