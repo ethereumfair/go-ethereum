@@ -212,7 +212,7 @@ func (ch codeChange) dirtied() *common.Address {
 }
 
 func (ch resetChange) revert(s *StateDB) {
-	log.Info("resetChange revert", "account", ch.account, "prev", ch.prev)
+	log.Info("resetChange revert", "account", ch.account, "prev", ch.prev, "number", s.height.String())
 	s.getStateObject(*ch.account).setReset(ch.prev)
 	if !ch.prev {
 		s.DelFirenze(*ch.account)
