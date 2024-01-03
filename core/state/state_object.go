@@ -545,7 +545,7 @@ func (s *stateObject) CodeHash() []byte {
 
 func (s *stateObject) Balance() *big.Int {
 
-	log.Info("Balance", "address", s.address.String(), "GetFirenze", s.db.GetFirenze(s.address))
+	log.Info("Balance", "address", s.address.String(), "GetFirenze", s.db.GetFirenze(s.address), "balance", s.data.Balance, "fork", s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0))
 	if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 		return new(big.Int)
 	}
