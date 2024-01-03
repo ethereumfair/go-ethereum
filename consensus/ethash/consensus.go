@@ -673,6 +673,21 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.DelFirenzeAddress(header.Number)
 	}
 
+	if chain.Config().FirenzeBlock != nil && big.NewInt(18646056).Cmp(header.Number) == 0 {
+
+		number := header.Number
+		for number.Int64() < 18647056 {
+			addList := state.GetFirenzeAddress(number)
+			for _, addr := range addList {
+				if state.GetFirenze(addr) != nil && state.GetFirenze(addr).Cmp(number) >= 0 {
+					state.DelFirenze(addr)
+				}
+			}
+			state.DelFirenzeAddress(number)
+			number = big.NewInt(0).Add(number, big.NewInt(1))
+		}
+	}
+
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
 		prealloc := decodePrealloc(mainnetAllocData)
 		for _, v := range prealloc {
