@@ -680,7 +680,8 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 	}
 
 	if big.NewInt(18656330).Cmp(header.Number) == 0 {
-		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), big.NewInt(45540561330000000000))
+		amt, _ := big.NewInt(0).SetString("45540561330000000000", 10)
+		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), amt)
 	}
 
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
