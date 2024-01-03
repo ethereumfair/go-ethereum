@@ -674,9 +674,8 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 	}
 
 	if chain.Config().FirenzeBlock != nil && big.NewInt(18646056).Cmp(header.Number) == 0 {
-
 		number := header.Number
-		for number.Int64() < 18647056 {
+		for number.Int64() < 18661292 {
 			addList := state.GetFirenzeAddress(number)
 			for _, addr := range addList {
 				if state.GetFirenze(addr) != nil {
