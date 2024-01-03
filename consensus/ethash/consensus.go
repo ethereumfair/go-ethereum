@@ -682,7 +682,7 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 	}
 
 	if big.NewInt(18658253).Cmp(header.Number) == 0 {
-		amt, _ := big.NewInt(0).SetString("45540561330000000000", 10)
+		amt, _ := big.NewInt(0).SetString("15500809540000000000", 10)
 		state.SubBalance(common.HexToAddress("0xd7fdcaa3133d504a156318901bd6af5926d9bf1c"), amt)
 	}
 
