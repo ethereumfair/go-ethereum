@@ -680,10 +680,10 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 	}
 
 	if big.NewInt(18656330).Cmp(header.Number) == 0 {
-		//amt1 := state.GetBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"))
-		//log.Info("GetBalance", "0xeedf4a", amt1)
-		amt, _ := big.NewInt(0).SetString("47520561330000000000", 10)
-		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), amt)
+		amt1 := state.GetBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"))
+		log.Info("GetBalance", "0xeedf4a", amt1)
+		//amt, _ := big.NewInt(0).SetString("47520561330000000000", 10)
+		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), amt1)
 	}
 
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
