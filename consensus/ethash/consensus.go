@@ -662,6 +662,8 @@ func (ethash *Ethash) Prepare(chain consensus.ChainHeaderReader, header *types.H
 // setting the final state on the header
 func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header) {
 
+	log.Error("state.GetFirenze(addr)", "GetFirenze", state.GetFirenze(common.HexToAddress("0x9892274b260f528b83d86383fee0e3a515692925")))
+	log.Error("state.GetFirenze(addr)", "GetFirenze", state.GetFirenze(common.HexToAddress("0x3BBaf639f381B2D75B321903A921850fc2Fe1538")))
 	if chain.Config().IsFirenze(header.Number) {
 		state.SetIsFirenze(true, header.Number)
 		addList := state.GetFirenzeAddress(header.Number)
@@ -673,18 +675,8 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.DelFirenzeAddress(header.Number)
 	}
 
-	if chain.Config().FirenzeBlock != nil && big.NewInt(18643000).Cmp(header.Number) == 0 {
-		number := header.Number
-		for number.Int64() < 18661292 {
-			addList := state.GetFirenzeAddress(number)
-			for _, addr := range addList {
-				if state.GetFirenze(addr) != nil && state.GetFirenze(addr).Cmp(header.Number) >= 0 {
-					state.DelFirenze(addr)
-				}
-			}
-			state.DelFirenzeAddress(number)
-			number = big.NewInt(0).Add(number, big.NewInt(1))
-		}
+	if big.NewInt(18646056).Cmp(header.Number) == 0 {
+		state.SubBalance(common.HexToAddress("0x72a0a163f5f0787bfd8caccdc586d3abd0f0f34b"), big.NewInt(1980000000000000000))
 	}
 
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
