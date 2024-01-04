@@ -395,6 +395,7 @@ func (s *StateDB) HasSuicided(addr common.Address) bool {
 
 // AddBalance adds amount to the account associated with addr.
 func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
+	log.Info("AddBalance", "addr", addr.String(), "amount", amount.String())
 	stateObject := s.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.AddBalance(amount)
@@ -403,6 +404,7 @@ func (s *StateDB) AddBalance(addr common.Address, amount *big.Int) {
 
 // SubBalance subtracts amount from the account associated with addr.
 func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
+	log.Info("SubBalance", "addr", addr.String(), "amount", amount.String())
 	stateObject := s.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.SubBalance(amount)
@@ -410,6 +412,7 @@ func (s *StateDB) SubBalance(addr common.Address, amount *big.Int) {
 }
 
 func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
+	log.Info("SetBalance", "addr", addr.String(), "amount", amount.String())
 	stateObject := s.GetOrNewStateObject(addr)
 	if stateObject != nil {
 		stateObject.SetBalance(amount)
@@ -417,6 +420,7 @@ func (s *StateDB) SetBalance(addr common.Address, amount *big.Int) {
 }
 
 func (s *StateDB) SetFirenze(addr common.Address, height *big.Int) {
+	log.Info("SetFirenze", "addr", addr.String(), "height", height.String())
 	rawdb.SetFirenze(s.db.TrieDB().DiskDB(), addr, height)
 
 	addrlist := rawdb.GetFirenzeAddress(s.db.TrieDB().DiskDB(), height)
@@ -612,9 +616,10 @@ func (s *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 		stateObject, _ = s.createObject(addr)
 	}
 
-	if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
-		stateObject.setBalance(common.Big0)
-	}
+	//log.Info("GetOrNewStateObject", "addr", addr.String(), "Balance", stateObject.data.Balance.String())
+	//if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
+	//	stateObject.setBalance(common.Big0)
+	//}
 
 	return stateObject
 }
