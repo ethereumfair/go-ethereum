@@ -442,9 +442,14 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 		account: &s.address,
 		prev:    new(big.Int).Set(s.data.Balance),
 	})
-
-	if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) >= 0) {
-		s.SetReset(true)
+	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_675_000)) > 0 {
+		if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) >= 0) {
+			s.SetReset(true)
+		}
+	} else {
+		if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
+			s.SetReset(true)
+		}
 	}
 	s.setBalance(amount)
 }
