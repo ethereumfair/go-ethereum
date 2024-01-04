@@ -617,7 +617,8 @@ func (s *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 	}
 
 	//log.Info("GetOrNewStateObject", "addr", addr.String(), "Balance", stateObject.data.Balance.String())
-	if s.height.Cmp(big.NewInt(18_675_000)) < 0 {
+	if s.height != nil && s.height.Cmp(big.NewInt(18_675_000)) > 0 {
+	} else {
 		if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
 			stateObject.setBalance(common.Big0)
 		}
