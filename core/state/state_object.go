@@ -442,7 +442,7 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 		account: &s.address,
 		prev:    new(big.Int).Set(s.data.Balance),
 	})
-	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_675_000)) > 0 {
+	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_676_000)) > 0 {
 		if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) >= 0) {
 			s.SetReset(true)
 		}
@@ -551,7 +551,7 @@ func (s *stateObject) CodeHash() []byte {
 
 func (s *stateObject) Balance() *big.Int {
 	log.Info("Balance", "address", s.address.String(), "GetFirenze", s.db.GetFirenze(s.address), "balance", s.data.Balance, "fork", s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0), "s.reset", s.reset)
-	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_675_000)) > 0 {
+	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_676_000)) > 0 {
 		if s.isFirenze && !s.reset && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 			return new(big.Int)
 		}
@@ -560,7 +560,6 @@ func (s *stateObject) Balance() *big.Int {
 			return new(big.Int)
 		}
 	}
-	//&& s.reset
 	return s.data.Balance
 }
 
