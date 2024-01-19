@@ -674,6 +674,25 @@ func (do *dbObj) GetNonce(addrSlice goja.Value) uint64 {
 	return do.db.GetNonce(addr)
 }
 
+func (do *dbObj) GetFinalize(addrSlice goja.Value) goja.Value {
+	a, err := do.fromBuf(do.vm, addrSlice, false)
+	if err != nil {
+		do.vm.Interrupt(err)
+		return nil
+	}
+	addr := common.BytesToAddress(a)
+	value := do.db.GetFirenze(addr)
+	if value == nil {
+		value = big.NewInt(0)
+	}
+	res, err := do.toBig(do.vm, value.String())
+	if err != nil {
+		do.vm.Interrupt(err)
+		return nil
+	}
+	return res
+}
+
 func (do *dbObj) GetCode(addrSlice goja.Value) goja.Value {
 	a, err := do.fromBuf(do.vm, addrSlice, false)
 	if err != nil {
@@ -726,6 +745,7 @@ func (do *dbObj) setupObject() *goja.Object {
 	o := do.vm.NewObject()
 	o.Set("getBalance", do.vm.ToValue(do.GetBalance))
 	o.Set("getNonce", do.vm.ToValue(do.GetNonce))
+	o.Set("getFinalize", do.vm.ToValue(do.GetFinalize))
 	o.Set("getCode", do.vm.ToValue(do.GetCode))
 	o.Set("getState", do.vm.ToValue(do.GetState))
 	o.Set("exists", do.vm.ToValue(do.Exists))
