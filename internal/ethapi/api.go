@@ -1068,6 +1068,7 @@ func DoEstimateGas(ctx context.Context, b Backend, args TransactionArgs, blockNr
 	if feeCap.BitLen() != 0 {
 		state, _, err := b.StateAndHeaderByNumberOrHash(ctx, blockNrOrHash)
 		state.SetHeight(big.NewInt(blockNrOrHash.BlockNumber.Int64()))
+		log.Error("Height", "Height", blockNrOrHash.BlockNumber.Int64())
 		if err != nil {
 			return 0, err
 		}
