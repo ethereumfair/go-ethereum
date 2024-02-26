@@ -513,8 +513,31 @@ func (d *Downloader) syncWithPeer(p *peerConnection, hash common.Hash, td, ttd *
 	// threshold (i.e. new chain). In that case we won't really snap sync
 	// anyway, but still need a valid pivot block to avoid some code hitting
 	// nil panics on access.
+	//if mode == SnapSync && pivot == nil {
 	if mode == SnapSync && pivot == nil {
 		pivot = d.blockchain.CurrentBlock().Header()
+		//pivot = &types.Header{
+		//	Number: big.NewInt(1499),
+		//	Root:   common.HexToHash("0x36302ee79f465172e91743180e86192f8e4db0e64591f5bd7431c6fa7d9b0a18"),
+		//}
+		//baseFeePerGas: 7,
+		//	difficulty: 8277639884963,
+		//	extraData: "0xd88301000a846765746888676f312e32302e32856c696e7578",
+		//	gasLimit: 30000000,
+		//	gasUsed: 0,
+		//	hash: "0x57db7795f77227681b4a4e896eb87ec2d060352fd0d3e47d886c3a26c0b385da",
+		//	miner: "0x08f470d8544b406f766390482b2754123ae7b7cf",
+		//	mixHash: "0x082164b6e8e4050b03ceb545609c3d63fbd1749012e5d1851359fd2be7bdc33c",
+		//	nonce: "0x1c80f972387d2101",
+		//	number: 18574999,
+		//	parentHash: "0x10a4878bef813148f65ffda1b8bdf356c178d9e3e54494a00f2a4e9b855795fc",
+		//	receiptsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
+		//	sha3Uncles: "0x1dcc4de8dec75d7aab85b567b6ccd41ad312451b948a7413f0a142fd40d49347",
+		//	stateRoot: "0x07a8c91fba999ac945a1fa2ae8ac1261264a485f50068804a3f5a50a1371faa2",
+		//	timestamp: 1703138029,
+		//	totalDifficulty: 5.8806928736389180129496e+22,
+		//	transactions: [],
+		//transactionsRoot: "0x56e81f171bcc55a6ff8345e692c0f86e5b48e01b996cadc001622fb5e363b421",
 	}
 	height := latest.Number.Uint64()
 

@@ -118,8 +118,8 @@ var (
 		RomeBlock:               big.NewInt(0),
 		InitiateBlock:           big.NewInt(0),
 		MilanoBlock:             big.NewInt(0),
-		FirenzeBlock:            big.NewInt(10),
-		FirenzeForkBlock:        big.NewInt(15),
+		FirenzeBlock:            big.NewInt(3000),
+		FirenzeForkBlock:        big.NewInt(3500),
 		Ethash:                  new(EthashConfig),
 	}
 
