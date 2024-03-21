@@ -272,7 +272,9 @@ func GenerateChain(config *params.ChainConfig, parent *types.Block, engine conse
 		return nil, nil
 	}
 	for i := 0; i < n; i++ {
-		statedb, err := state.New(parent.Root(), config.IsFirenze(parent.Number()), parent.Number(), state.NewDatabase(db), nil)
+
+		fork := config.IsFirenze(parent.Number()) && !config.IsVenezia(parent.Number())
+		statedb, err := state.New(parent.Root(), fork, parent.Number(), state.NewDatabase(db), nil)
 		if err != nil {
 			panic(err)
 		}

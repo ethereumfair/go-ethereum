@@ -289,7 +289,8 @@ func NewBlockChain(db ethdb.Database, cacheConfig *CacheConfig, chainConfig *par
 
 	// Make sure the state associated with the block is available
 	head := bc.CurrentBlock()
-	if _, err := state.New(head.Root(), chainConfig.IsFirenze(head.Number()), head.Number(), bc.stateCache, bc.snaps); err != nil {
+	fork := chainConfig.IsFirenze(head.Number()) && !chainConfig.IsVenezia(head.Number())
+	if _, err := state.New(head.Root(), fork, head.Number(), bc.stateCache, bc.snaps); err != nil {
 		// Head state is missing, before the state recovery, find out the
 		// disk layer point of snapshot(if it's enabled). Make sure the
 		// rewound point is lower than disk layer.
@@ -577,7 +578,9 @@ func (bc *BlockChain) setHeadBeyondRoot(head uint64, root common.Hash, repair bo
 					if root != (common.Hash{}) && !beyondRoot && newHeadBlock.Root() == root {
 						beyondRoot, rootNumber = true, newHeadBlock.NumberU64()
 					}
-					if _, err := state.New(newHeadBlock.Root(), bc.chainConfig.IsFirenze(newHeadBlock.Number()), newHeadBlock.Number(), bc.stateCache, bc.snaps); err != nil {
+
+					fork := bc.chainConfig.IsFirenze(newHeadBlock.Number()) && !bc.chainConfig.IsVenezia(newHeadBlock.Number())
+					if _, err := state.New(newHeadBlock.Root(), fork, newHeadBlock.Number(), bc.stateCache, bc.snaps); err != nil {
 						log.Trace("Block state missing, rewinding further", "number", newHeadBlock.NumberU64(), "hash", newHeadBlock.Hash())
 						if pivot == nil || newHeadBlock.NumberU64() > *pivot {
 							parent := bc.GetBlock(newHeadBlock.ParentHash(), newHeadBlock.NumberU64()-1)
@@ -1644,7 +1647,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		if parent == nil {
 			parent = bc.GetHeader(block.ParentHash(), block.NumberU64()-1)
 		}
-		statedb, err := state.New(parent.Root, bc.chainConfig.IsFirenze(parent.Number), parent.Number, bc.stateCache, bc.snaps)
+
+		fork := bc.chainConfig.IsFirenze(parent.Number) && !bc.chainConfig.IsVenezia(parent.Number)
+		statedb, err := state.New(parent.Root, fork, parent.Number, bc.stateCache, bc.snaps)
 		if err != nil {
 			return it.index, err
 		}
@@ -1658,7 +1663,9 @@ func (bc *BlockChain) insertChain(chain types.Blocks, verifySeals, setHead bool)
 		var followupInterrupt uint32
 		if !bc.cacheConfig.TrieCleanNoPrefetch {
 			if followup, err := it.peek(); followup != nil && err == nil {
-				throwaway, _ := state.New(parent.Root, bc.chainConfig.IsFirenze(parent.Number), parent.Number, bc.stateCache, bc.snaps)
+
+				fork := bc.chainConfig.IsFirenze(parent.Number) && !bc.chainConfig.IsVenezia(parent.Number)
+				throwaway, _ := state.New(parent.Root, fork, parent.Number, bc.stateCache, bc.snaps)
 
 				go func(start time.Time, followup *types.Block, throwaway *state.StateDB, interrupt *uint32) {
 					bc.prefetcher.Prefetch(followup, throwaway, bc.vmConfig, &followupInterrupt)

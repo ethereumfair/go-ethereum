@@ -442,11 +442,11 @@ func (s *stateObject) SetBalance(amount *big.Int) {
 		prev:    new(big.Int).Set(s.data.Balance),
 	})
 	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_676_000)) > 0 {
-		if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) >= 0) {
+		if s.db.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) >= 0) {
 			s.SetReset(true)
 		}
 	} else {
-		if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
+		if s.db.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 			s.SetReset(true)
 		}
 	}
@@ -549,11 +549,11 @@ func (s *stateObject) CodeHash() []byte {
 
 func (s *stateObject) Balance() *big.Int {
 	if s.db.height != nil && s.db.height.Cmp(big.NewInt(18_676_000)) > 0 {
-		if s.isFirenze && !s.reset && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
+		if s.db.isFirenze && !s.reset && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 			return new(big.Int)
 		}
 	} else {
-		if s.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
+		if s.db.isFirenze && (s.db.GetFirenze(s.address) == nil || s.db.GetFirenze(s.address).Cmp(s.db.height) > 0) {
 			return new(big.Int)
 		}
 	}

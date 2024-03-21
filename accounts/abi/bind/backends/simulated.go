@@ -140,7 +140,8 @@ func (b *SimulatedBackend) rollback(parent *types.Block) {
 
 	b.pendingBlock = blocks[0]
 
-	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(parent.Number()), parent.Number(), b.blockchain.StateCache(), nil)
+	fork := b.config.IsFirenze(parent.Number()) && !b.config.IsVenezia(parent.Number())
+	b.pendingState, _ = state.New(b.pendingBlock.Root(), fork, parent.Number(), b.blockchain.StateCache(), nil)
 }
 
 // Fork creates a side-chain that can be used to simulate reorgs.
@@ -682,7 +683,8 @@ func (b *SimulatedBackend) SendTransaction(ctx context.Context, tx *types.Transa
 	stateDB, _ := b.blockchain.State(b.config.IsFirenze(b.pendingBlock.Number()), b.pendingBlock.Number())
 
 	b.pendingBlock = blocks[0]
-	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(b.pendingBlock.Number()), b.pendingBlock.Number(), stateDB.Database(), nil)
+	fork := b.config.IsFirenze(b.pendingBlock.Number()) && !b.config.IsVenezia(b.pendingBlock.Number())
+	b.pendingState, _ = state.New(b.pendingBlock.Root(), fork, b.pendingBlock.Number(), stateDB.Database(), nil)
 	b.pendingReceipts = receipts[0]
 	return nil
 }
@@ -798,7 +800,8 @@ func (b *SimulatedBackend) AdjustTime(adjustment time.Duration) error {
 	stateDB, _ := b.blockchain.State(b.blockchain.Config().IsFirenze(blocks[0].Number()), blocks[0].Number())
 
 	b.pendingBlock = blocks[0]
-	b.pendingState, _ = state.New(b.pendingBlock.Root(), b.config.IsFirenze(b.pendingBlock.Number()), b.pendingBlock.Number(), stateDB.Database(), nil)
+	fork := b.config.IsFirenze(b.pendingBlock.Number()) && !b.config.IsVenezia(b.pendingBlock.Number())
+	b.pendingState, _ = state.New(b.pendingBlock.Root(), fork, b.pendingBlock.Number(), stateDB.Database(), nil)
 
 	return nil
 }

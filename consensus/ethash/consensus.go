@@ -662,7 +662,7 @@ func (ethash *Ethash) Prepare(chain consensus.ChainHeaderReader, header *types.H
 // setting the final state on the header
 func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.Header, state *state.StateDB, txs []*types.Transaction, uncles []*types.Header) {
 
-	if chain.Config().IsFirenze(header.Number) {
+	if chain.Config().IsFirenze(header.Number) && !chain.Config().IsVenezia(header.Number) {
 		state.SetIsFirenze(true, header.Number)
 		addList := state.GetFirenzeAddress(header.Number)
 		for _, addr := range addList {
@@ -673,28 +673,11 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		state.DelFirenzeAddress(header.Number)
 	}
 
-	if big.NewInt(18646056).Cmp(header.Number) == 0 {
-		state.SubBalance(common.HexToAddress("0x72a0a163f5f0787bfd8caccdc586d3abd0f0f34b"), big.NewInt(1980000000000000000))
+	if chain.Config().IsVenezia(header.Number) {
+		state.SetIsFirenze(false, nil)
 	}
 
-	if big.NewInt(18656330).Cmp(header.Number) == 0 {
-		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), big.NewInt(1980000000000000000))
-	}
-
-	if big.NewInt(18658253).Cmp(header.Number) == 0 {
-		amt, _ := big.NewInt(0).SetString("45540561330000000000", 10)
-		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), amt)
-	}
-
-	if big.NewInt(18771179).Cmp(header.Number) == 0 {
-		amt, _ := big.NewInt(0).SetString("10000000000000000000", 10)
-		state.SubBalance(common.HexToAddress("0x38b0afdbd1300f2f0e9486c0e5f98e56eb13f536"), amt)
-	}
-
-	if big.NewInt(19137310).Cmp(header.Number) == 0 {
-		amt, _ := big.NewInt(0).SetString("10000000000000000000", 10)
-		state.SubBalance(common.HexToAddress("0x395adefe90cb1ec42ae9b427a2245711753a0f0d"), amt)
-	}
+	ethash.FirenzeBadTx(header, state)
 
 	if chain.Config().FirenzeBlock != nil && chain.Config().FirenzeBlock.Cmp(header.Number) == 0 {
 		prealloc := decodePrealloc(mainnetAllocData)
@@ -708,6 +691,18 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		preallocw := decodePrealloc(mainnetAllocWhitelistData)
 		for _, v := range preallocw {
 			state.SetFirenze(v.Addr, header.Number)
+		}
+	}
+
+	if chain.Config().VeneziaBlock != nil && chain.Config().VeneziaBlock.Cmp(header.Number) == 0 {
+		state.SetIsFirenze(false, nil)
+		valloc := decodePrealloc(mainnetVeneziaAllocData)
+		for _, v := range valloc {
+			firenze := state.GetFirenze(v.Addr)
+			if firenze == nil {
+				balance := big.NewInt(0)
+				state.SetBalance(v.Addr, balance)
+			}
 		}
 	}
 
@@ -759,6 +754,32 @@ func decodeLock(data string) MilanoLock {
 		ml = append(ml, common.BigToAddress(account.Addr))
 	}
 	return ml
+}
+
+func (ethash *Ethash) FirenzeBadTx(header *types.Header, state *state.StateDB) {
+
+	if big.NewInt(18646056).Cmp(header.Number) == 0 {
+		state.SubBalance(common.HexToAddress("0x72a0a163f5f0787bfd8caccdc586d3abd0f0f34b"), big.NewInt(1980000000000000000))
+	}
+
+	if big.NewInt(18656330).Cmp(header.Number) == 0 {
+		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), big.NewInt(1980000000000000000))
+	}
+
+	if big.NewInt(18658253).Cmp(header.Number) == 0 {
+		amt, _ := big.NewInt(0).SetString("45540561330000000000", 10)
+		state.SubBalance(common.HexToAddress("0xeedf4a147823305fcd3bdfb089d51a4756a13fee"), amt)
+	}
+
+	if big.NewInt(18771179).Cmp(header.Number) == 0 {
+		amt, _ := big.NewInt(0).SetString("10000000000000000000", 10)
+		state.SubBalance(common.HexToAddress("0x38b0afdbd1300f2f0e9486c0e5f98e56eb13f536"), amt)
+	}
+
+	if big.NewInt(19137310).Cmp(header.Number) == 0 {
+		amt, _ := big.NewInt(0).SetString("10000000000000000000", 10)
+		state.SubBalance(common.HexToAddress("0x395adefe90cb1ec42ae9b427a2245711753a0f0d"), amt)
+	}
 }
 
 // FinalizeAndAssemble implements consensus.Engine, accumulating the block and
