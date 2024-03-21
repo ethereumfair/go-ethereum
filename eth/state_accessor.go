@@ -54,7 +54,8 @@ func (eth *Ethereum) StateAtBlock(block *types.Block, reexec uint64, base *state
 	)
 	// Check the live database first if we have the state fully available, use that.
 	if checkLive {
-		statedb, err = eth.blockchain.StateAt(block.Root(), eth.blockchain.Config().IsFirenze(block.Number()), block.Number())
+		fork := eth.blockchain.Config().IsFirenze(block.Number()) && !eth.blockchain.Config().IsVenezia(block.Number())
+		statedb, err = eth.blockchain.StateAt(block.Root(), fork, block.Number())
 		if err == nil {
 			return statedb, nil
 		}

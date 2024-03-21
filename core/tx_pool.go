@@ -1318,7 +1318,7 @@ func (pool *TxPool) reset(oldHead, newHead *types.Header) {
 	pool.eip2718 = pool.chainconfig.IsBerlin(next)
 	pool.eip1559 = pool.chainconfig.IsLondon(next)
 	pool.isrome = pool.chainconfig.IsRome(next)
-	pool.isfirenze = pool.chainconfig.IsFirenze(next)
+	pool.isfirenze = pool.chainconfig.IsFirenze(next) && !pool.chainconfig.IsVenezia(next)
 }
 
 // promoteExecutables moves transactions that have become processable from the
