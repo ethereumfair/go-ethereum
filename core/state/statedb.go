@@ -613,7 +613,7 @@ func (s *StateDB) GetOrNewStateObject(addr common.Address) *stateObject {
 
 	if s.height != nil && s.height.Cmp(big.NewInt(18_676_000)) > 0 {
 	} else {
-		if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
+		if s.isFirenze && (s.GetFirenze(addr) == nil || (s.height != nil && s.GetFirenze(addr).Cmp(s.height) > 0)) {
 			stateObject.setBalance(common.Big0)
 		}
 	}
@@ -663,7 +663,7 @@ func (s *StateDB) CreateAccount(addr common.Address) {
 		newObj.setBalance(prev.data.Balance)
 	}
 
-	if s.isFirenze && (s.GetFirenze(addr) == nil || s.GetFirenze(addr).Cmp(s.height) > 0) {
+	if s.isFirenze && (s.GetFirenze(addr) == nil || (s.height != nil && s.GetFirenze(addr).Cmp(s.height) > 0)) {
 		s.SetFirenze(addr, s.height)
 		newObj.SetReset(true)
 	}
