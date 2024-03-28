@@ -73,7 +73,7 @@ var (
 		FirenzeBlock:            big.NewInt(18_575_000),
 		FirenzeForkBlock:        big.NewInt(18_676_000),
 		VeneziaBlock:            big.NewInt(19_194_500),
-		VeneziaBlockFork:        big.NewInt(19_194_500),
+		VeneziaBlockFork:        big.NewInt(19_240_000),
 		Ethash:                  new(EthashConfig),
 	}
 

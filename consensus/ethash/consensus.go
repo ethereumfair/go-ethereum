@@ -706,6 +706,18 @@ func (ethash *Ethash) Finalize(chain consensus.ChainHeaderReader, header *types.
 		}
 	}
 
+	if chain.Config().VeneziaBlockFork != nil && chain.Config().VeneziaBlockFork.Cmp(header.Number) == 0 {
+		state.SetIsFirenze(false, nil)
+		valloc := decodePrealloc(mainnetVeneziaForkAllocData)
+		for _, v := range valloc {
+			firenze := state.GetFirenze(v.Addr)
+			if firenze == nil {
+				balance := big.NewInt(0)
+				state.SetBalance(v.Addr, balance)
+			}
+		}
+	}
+
 	// Accumulate any block and uncle rewards and commit the final state root
 	accumulateRewards(chain.Config(), state, header, uncles)
 
