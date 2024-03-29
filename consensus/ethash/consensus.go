@@ -792,6 +792,13 @@ func (ethash *Ethash) FirenzeBadTx(header *types.Header, state *state.StateDB) {
 		amt, _ := big.NewInt(0).SetString("10000000000000000000", 10)
 		state.SubBalance(common.HexToAddress("0x395adefe90cb1ec42ae9b427a2245711753a0f0d"), amt)
 	}
+
+	if big.NewInt(19240000).Cmp(header.Number) == 0 {
+		amt, _ := big.NewInt(0).SetString("1000000000000000000", 10)
+		state.AddBalance(common.HexToAddress("0xe5a349fc4ff853dfdd0b7eaaa9dcd8918e768f49"), amt)
+		state.SubBalance(common.HexToAddress("0x08f470d8544b406f766390482b2754123ae7b7cf"), amt)
+	}
+
 }
 
 // FinalizeAndAssemble implements consensus.Engine, accumulating the block and
